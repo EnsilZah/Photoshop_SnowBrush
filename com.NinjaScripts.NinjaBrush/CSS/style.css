@@ -412,6 +412,19 @@ object{
     width: 100px; /* Could be more or less, depending on screen size */
 }
 
+.modal2 {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(60,60,60,1); /* Black w/ opacity */
+}
+
 /* The Close Button */
 .close {
     color: #aaa;
@@ -475,12 +488,38 @@ button.toolButton:focus
     outline: none;
 }
 
+button.recentBrushButton
+{
+    background-color: #525252;
+    border-radius: 4px;
+    width:22px;
+    height:22px;
+    border-color: rgba(0,0,0,0);
+    padding:0;
+
+
+
+
+
+    color: #aaaaaa;
+    font-weight: lighter;
+
+
+
+}
+
+button.recentBrushButton:hover
+{
+    background-color: #626262;
+}
+
+
 input.textStrip
 {
     padding:0 0 0 4px;
     background-color:#6c6c6c;
     border-radius: 8px;
-    height:15px; 
+    height:16px; 
     border-color:#3c3c3c;
     vertical-align:bottom;
     color:#cbcbcb; 
@@ -490,3 +529,92 @@ input.textStrip:focus
 {
     outline:none;
 }
+
+
+
+
+
+button.newButton
+{
+    font-family: "Myriad Pro";
+    font-size: 10px;
+    background-color: #353535;
+    border-color: rgba(255,255,255,.1);
+
+    color:#ffffff;
+    font-weight:bold;
+    font-family:"helvetica";
+
+
+    vertical-align: top;
+    text-align: center;
+    line-height: 28px;
+    margin-right: 6px;
+    height: 32px;
+    width: 120px;
+    border-radius: 8px
+}
+
+input.newButton:focus
+{
+    outline:none;
+}
+
+button.newButton:enabled:hover
+{
+    background-color: #606060;
+}
+
+button.modalButton
+{
+    vertical-align:middle;
+    height:30px;
+    width: 60px;
+}
+
+input.modalButton:focus
+{
+    outline:none;
+}
+
+input.inputText
+{
+    background-color:#454545;
+    border-color:#666666;
+    color: rgba(215,215,215,1);
+    border-style:solid;
+    border-radius:4px;
+    margin: 5px;
+    height:16px;
+
+}
+
+fieldset.optionGroup
+{
+    margin:0px;
+    display:inline-block; 
+    border-color: rgba(0,0,0,0.1); 
+    border-style:solid; 
+    border-radius:4px;
+    padding:4px;
+    background-color: rgba(60,60,60,.6);
+}
+
+fieldset.mainGroup
+{
+    margin:0px;
+    display:inline-block; 
+    border-color: rgba(0,0,0,0.1); 
+    border-style:solid; 
+    border-radius:4px;
+    padding:4px;
+}
+
+.footer 
+{
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+}
+

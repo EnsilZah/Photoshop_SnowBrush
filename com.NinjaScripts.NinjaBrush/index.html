@@ -7,6 +7,10 @@
 <script>	
  	var fs = require('fs-extra');
  	var zipper = require("zip-local");
+	var path = require('path');
+
+	path.joinU = function(){	return path.join.apply({}, arguments).replace(/\\/g, '/');	}
+	path.normalizeU = function() {return path.normalize.apply({}, arguments).replace(/\\/g, '/');	}
 
 	var csInterface = new CSInterface();
 	loadJSX("SnowBrush.jsx")
@@ -20,6 +24,12 @@
 	</head>
 
 	<body id="mainBody" onresize="onDocResize()" onLoad="onLoadedDoc();" style="overflow: hidden; padding:0px; margin:0px; height:100%" ondrop='onDrop(event)'>
+
+
+	<span id="ModalSettingsContainer" style="margin: 0 0 0 0;"></span>
+	<script>$("#ModalSettingsContainer").load("HTML/Modals/Ext_Settings.html");</script>
+
+
 
 
 	<div id="myModal" class="modal">
@@ -63,23 +73,38 @@
 
 		</div>
 
-		<div id="RecentBar" hidden oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
-
-			<img src='images/tmpBrushIcons/ThumbShort.png' alt='' align='center' style='width:24px; height:24px'>
-			<img src='images/tmpBrushIcons/ThumbShort_2.png' alt='' align='center' style='width:24px; height:24px'>
-			<img src='images/tmpBrushIcons/ThumbShort_3.png' alt='' align='center' style='width:24px; height:24px'>
-			<img src='images/tmpBrushIcons/ThumbShort_4.png' alt='' align='center' style='width:24px; height:24px'>
-			<img src='images/tmpBrushIcons/ThumbShort_5.png' alt='' align='center' style='width:24px; height:24px'>
-			<img src='images/tmpBrushIcons/ThumbShort_6.png' alt='' align='center' style='width:24px; height:24px'>
+		<div id="RecentBar"  oncontextmenu="contextDefault()" align = "left" style="height:24px;max-height:24px;overflow:hidden; background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
 		</div>
 
 
 
+
+
+
+
+		</table>
+
+
 		<div id="SearchBar" oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
 
-			<img src='images/search.png' alt='' align='center' style="padding:0 1px 0 3px" >
-			<input id="searchText" type="text" align='center' onkeyup="NBPanel.search.update();" class="textStrip">
-			<button class="toolButton" onclick="NBPanel.search.clear()" style="width:50px;height:15px;position: relative; top:3px">Clear</button>
+			<table width="100%" style="position: relative;top:-2px">
+				<td align='left' style='white-space: nowrap;'>
+				<img src='images/search.png' alt='' align='center' style="padding:0 1px 0 3px" >
+				<input id="searchText" type="text" align='center' onkeyup="NBPanel.search.update();" class="textStrip" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%">
+
+				</td>
+
+
+
+
+				<td align='right' style='white-space: nowrap;'>		
+					<button class="toolButton" align="right" onclick="NBPanel.search.clear()" style="width:50px;height:16px;position: relative; top:1px">Clear</button>
+					<button class="toolButton" align="right" onclick="" style="width:35px;height:16px;position: relative; top:1px">All</button>		
+				</td>
+			</table>
+
+
+
 		</div>
 
 
@@ -127,6 +152,11 @@
 
 			<button id='btn_AddFromFile' onclick="AddFromFile()" class="TabButton" title="Import File" style="position:relative; top:-7px; border-radius:0; height:15px; overflow:hidden; " >
 				<img src='images/AddFile03.png' alt='' align='left' style="opacity:.5"/>
+			</button>
+
+
+			<button onclick = "modalSettings.open()"  class="TabButton" style="position:relative; top:-7px; border-radius:0; height:15px; overflow:hidden;">
+			<img src='images/settings.png' alt='' align='left' style="opacity:.5"/>
 			</button>
 <!--
 			<button id='btn_Export' align='right' onclick="exportAll();" class="TabButton" title="Export File" style="position:relative;top:-7px; border-radius:0; width:22px; height:15px; overflow:hidden; " >
@@ -518,6 +548,62 @@ function SnowBrushPanel()
 	this.entriesPath = this.dataPath + "Entries/"
 
 
+	this.recentBrushes=
+	{
+		element: document.getElementById("RecentBar"),
+		maxLength:30,
+		list:[],
+
+		save:function()
+		{
+
+		},
+
+		load:function()
+		{
+
+
+		},
+
+		add:function(inBrushPath)
+		{
+			inBrushPath = inBrushPath.substring(0,inBrushPath.indexOf("/Entry.tpl"))
+
+			var btn = document.createElement("BUTTON");
+			btn.className = "recentBrushButton"
+			btn.style.borderRadius = "0px"
+			btn.value = inBrushPath
+			var squareThumb = "url("+ encodeURI(path.joinU(inBrushPath,"ThumbShort.png"))+"?" + new Date().getTime()  + ")"
+			btn.style.backgroundImage = squareThumb
+				btn.style.backgroundSize = "22px 22px"
+			btn.onclick = function(){eval(this.dataset.script)}
+
+	
+			btn.dataset.id = inBrushPath.substring(inBrushPath.length-8)
+
+
+			btn.dataset.script = NBPanel.brushes.brush(btn.dataset.id).element.firstChild.dataset.script 
+
+			this.element.insertAdjacentElement('afterbegin', btn);
+
+
+			//Remove duplicates
+			for (var i =  this.element.childNodes.length - 1; i > 0; i--)
+			{
+				if (this.element.childNodes[i].dataset &&(this.element.childNodes[i].dataset.id == btn.dataset.id))
+				{
+					this.element.removeChild(this.element.childNodes[i])
+				}
+			}
+
+			//Remove above maxLength
+			for (var i = this.element.childNodes.length - 1; i > this.maxLength; i-- )
+			{
+				this.element.removeChild(this.element.childNodes[i])
+			}	
+		},
+	}
+
 	this.search=
 	{
 		brushGroup:null,
@@ -814,10 +900,6 @@ function SnowBrushPanel()
 		{
 			var brushData = JSON.parse(fs.readFileSync(inPath+"/Entry.json", 'utf8'))
 
-			var stringFG = "JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorFG)"
-			var stringBG ="JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorBG)"
-			var inScript = "setEntryPath('" + inPath + "/Entry.tpl" + "'," + stringFG + "," + stringBG + ")";
-
 
 
 
@@ -830,9 +912,16 @@ function SnowBrushPanel()
 			btnGrp.className = "BrushHolder"
 	
 			var btn = document.createElement("BUTTON");
+
+
+
+			var stringFG = "JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorFG)"
+			var stringBG ="JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorBG)"
+			btn.dataset.script = "setEntryPath('" + inPath + "/Entry.tpl" + "'," + stringFG + "," + stringBG + ")";
+
 			btn.className = "BrushButton"
 			btn.value = inName
-			btn.onclick = function(){eval(inScript)}
+			btn.onclick = function(){eval(this.dataset.script)}
 			btn.oncontextmenu = function(event){event.stopPropagation(); contextSharedBrush(this.value)}
 			btnGrp.appendChild(btn);
 
@@ -963,7 +1052,6 @@ function SnowBrushPanel()
 			var stringFG = "JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorFG)"
 			var stringBG ="JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorBG)"
 			var stringPath = NBPanel.entriesPath+"/"+inBrushID+"/Entry.tpl"
-			var inScript = "setEntryPath('" + stringPath + "'," + stringFG + "," + stringBG + ")";
 
 
 
@@ -982,9 +1070,10 @@ function SnowBrushPanel()
 
 
 			var btn = document.createElement("BUTTON");
+			btn.dataset.script = "setEntryPath('" + stringPath + "'," + stringFG + "," + stringBG + ");"  + 	"NBPanel.recentBrushes.add('" + stringPath + "')";
 			btn.className = "BrushButton"
 			btn.value = inName
-			btn.onclick = function(){eval(inScript)}
+			btn.onclick = function(){eval(this.dataset.script)}
 			btn.oncontextmenu = function(event){event.stopPropagation(); contextBrush(this.value)}
 			btnGrp.appendChild(btn);
 
@@ -1695,7 +1784,38 @@ function SnowBrushPanel()
 			scaleSlider: 64,
 			activeBrushGroup:"",
 			persistent: true,
-			shareLocation:""
+			shareLocation:"",
+
+			showTools:true,
+			showRecent:true,
+			showSearch:true,
+			showShared:true,
+		},
+
+		showTools:function(inVal)
+		{
+			this.values.showTools = inVal;
+			var ToolBar = document.getElementById("ToolBar")
+			ToolBar.style.display = inVal?"block":"none";
+		},
+
+		showRecent:function(inVal)
+		{
+			this.values.showRecent = inVal;
+			var RecentBar = document.getElementById("RecentBar")
+			RecentBar.style.display = inVal?"block":"none";
+		},
+
+		showSearch:function(inVal)
+		{
+			this.values.showSearch = inVal;
+			var SearchBar = document.getElementById("SearchBar")
+			SearchBar.style.display = inVal?"block":"none";
+		},
+
+		showShared:function(inVal)
+		{
+			this.values.showShared = inVal;
 		},
 
 		apply: function()
@@ -1706,6 +1826,11 @@ function SnowBrushPanel()
 			this.setPersistent();
 			NBPanel.brushes.updateLook()
 
+		},
+
+		save:function()
+		{
+			this.write();
 		},
 
 		write: function ()
@@ -1727,6 +1852,13 @@ function SnowBrushPanel()
 			this.setThumbLong(inValues.showLongThumb)
 			this.setTxt(inValues.showText)
 			this.setColor(inValues.useColor)
+
+
+			if(inValues.showTools != undefined) this.showTools(inValues.showTools)
+			if(inValues.showRecent != undefined) this.showRecent(inValues.showRecent)
+			if(inValues.showSearch != undefined) this.showSearch(inValues.showSearch)
+			if(inValues.showShared != undefined) this.showShared(inValues.showShared)
+
 
 			this.values.activeBrushGroup = inValues.activeBrushGroup;
 			document.getElementById("sizeSlider").value = this.values.scaleSlider
@@ -1853,6 +1985,8 @@ function SnowBrushPanel()
 		NBPanel.sharedTab.init();
 		NBPanel.tabs.init();
 		NBPanel.search.init();
+
+		//NBPanel.settings.showTools(false)
 
 
 		NBPanel.brushes.updateLook()
@@ -2398,6 +2532,7 @@ function setEntryPath(inPath,inColorFG,inColorBG)
 		inColorBG = undefined;
 	}
 	csInterface.evalScript("setEntryPath('" + inPath +"','" + inColorFG + "','" + inColorBG + "');");	
+
 }
 
 function setBrush(inName)
