@@ -1,0 +1,492 @@
+
+html{
+    min-height:100%;/* make sure it is at least as tall as the viewport */
+    position:relative;
+}
+
+body {   
+
+    font-family: "Myriad Pro";
+    font-size: 14px;
+    font-variant: small-caps;
+    font-weight: black;
+	cursor: default;
+    text-align:center;
+
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  background-color: transparent;
+  width: 100%;
+  border: 0px;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 2px;
+  cursor: pointer;
+  background: #666666;
+  border-radius: 1.3px;
+  border: 0.2px solid #010101;
+  margin-top:-7px;
+}
+input[type=range]::-webkit-slider-thumb {
+  border: 0px;
+  height: 8px;
+  width: 8px;
+  border-radius: 4px;
+  background: #2c2c2c;
+  cursor: pointer;
+  -webkit-appearance: none;
+    margin-top: -3px;
+}
+/*
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #367ebd;
+}*/
+
+input[type=text].sliderText
+{
+    height:16px;
+    width:28px; 
+    border:0px; 
+    padding:0px;
+    background:transparent;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    cursor: default;
+    color:#666666;
+}
+input[type=text].sliderText:focus
+{
+    outline:none;
+            user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    cursor: default;
+}
+
+.bottomBar
+{
+    background-color: #535353; 
+    position:fixed; 
+    bottom:-6px;
+    height:21px; 
+    width: 100%;
+}
+
+.scroll {
+
+    position:absolute;
+    top:0px;
+    bottom:40px;
+    left:0;
+    right:0;
+    background-color: #333333;
+    padding: 4px;
+    margin: 0px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+
+   box-shadow:         0px -8px 8px -8px rgba(0,0,0,0.5) inset,
+                        0px  8px 8px -8px rgba(0,0,0,0.5) inset;
+
+    /*z-index:-1;*/ /* Remove this line if it's not going to be a background! */
+}
+.scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroll::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 1px;
+    background-color: #333333;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+    border-radius: 1px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555555;
+}
+
+button, select, input
+{
+    
+    border:1px solid;
+    height:19px;
+    font-family: "Myriad Pro";
+    font-size: 14px;
+}
+
+div.BrushHolder
+{
+    display: block;
+    float:left;
+
+    overflow:hidden;
+    margin:4px;
+
+
+    color:#111111;
+}
+
+button.BrushButton
+{
+    width: 64px;
+    height:64px;
+    -moz-background-clip: padding; 
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border-radius : 8px;
+    background-color: #2c2c2c;
+    border-color: #2c2c2c;
+    background-size: 100%;
+    margin: 1px;
+}
+
+button.ColorDotLeft
+{
+    width:10px;
+    height:10px;
+    background-color: #aaaaaa;
+    border-radius: 5px 0px 0px 5px;
+    border-style: none;
+
+}
+
+button.ColorDotRight
+{
+    width:10px;
+    height:10px;
+    background-color: #cccccc;
+    border-radius: 0px 5px 5px 0px;
+    border-style: none;
+}
+button.ColorDotRight:focus
+{   outline:none; }
+button.ColorDotLeft:focus
+{   outline:none; }
+
+button.BrushButton:focus
+{
+    background-color: #3c352c;
+    border-color:#aa9988;
+    outline:none;
+}
+
+button.BrushButton_Selected
+{
+    -moz-background-clip: padding; 
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border-radius : 8px;
+    background-color: #2c2c2c;
+    border-color: #2c2c2c;
+    background-size: 100%;
+    margin: 1px;
+
+    background-color: #3c352c;
+    border-color:#aa9988;
+    outline:none;
+}
+
+
+
+button.TabButton
+{
+
+    height:20px;
+
+    border-style: solid solid none solid;
+    border-radius: 5px 5px 0px 0px;
+    background-color: #424242;
+    color: #aaaaaa;
+    border-color:#393939;
+    font-weight: lighter;
+    margin:0px;
+    margin-right:2px;
+    margin-top:2px;
+
+}
+
+button.TabButton:hover
+{
+  background-color:#4c4c4c;
+}
+
+button.TabButton:focus
+{
+
+    background-color:#333333;
+    color: #ffffff;
+    outline: none;
+
+}
+
+button.TabButton_Selected
+{
+
+    height:20px;
+    border-style: solid solid none solid;
+    border-radius: 5px 5px 0px 0px;
+    color: #ffffff;
+    border-color:#333333;
+    font-weight: lighter;
+     margin:0px;
+    margin-right:2px;
+        margin-top:2px;
+    background-color:#333333;
+    outline: none;
+}
+
+
+button.TabShared
+{
+
+   /* background-color: #505042;*/
+        font-weight:light;
+    font-size: 10px;
+    font-style:italic;
+    color:#cccccc;
+    border-color:#333333;
+
+
+}
+
+input.editTab
+{
+    align-self: right;
+    background-color: #222222;
+    color:#ffffff;
+        border-width: 0px;
+    font-weight:lighter;
+    box-sizing:content-box;
+    font-size: 10px;
+    outline: none;
+    overflow:hidden;
+}
+
+input.editTab:focus
+{
+        outline: none;
+}
+
+input.editTab:disabled
+{
+    align-self: right;   
+    border-width: 0px;
+    min-width:10px;
+    background-color: transparent;
+    color:inherit;
+    font-weight:lighter;
+    font-weight: lighter;
+    box-sizing:content-box;
+}
+/*
+select.BaseSelect
+{
+	font-weight: lighter;
+	color: #222222;
+	height: 28px; 
+	width: 140px
+}
+*/
+select.BaseSelect:disabled
+{
+    opacity: 0.3;
+}
+/*
+button.BaseButton
+{
+	color: #000000;
+	vertical-align: top;
+	height: 32px;
+	width: 110px;
+	text-align: center;
+	line-height: 28px;
+	margin-right: 6px;
+}*/
+
+#content
+{
+    margin-right:auto;
+    margin-left:auto;
+    vertical-align:middle;
+    width:100%;
+}
+
+#content ul {
+padding:0px;
+
+}
+
+#content ul li {
+margin:3px 0px 3px 0px;
+}
+
+p { 
+line-height: 20px; 
+} 
+
+option.PredefinedOption
+{
+	color: #000000;
+	font-weight: bold;	
+}
+
+option.LegacyOption
+{
+	color: #AAAAAA;
+	font-style: italic;
+
+}
+
+option.CreatedOption
+{
+	color: #888888;
+}
+
+option.EmptyOption
+{
+	color: #888888;
+}
+
+option.FullOption
+{
+	color: #000000;
+}
+
+p.disabled
+{
+    background-color: #ff0000
+}
+
+}
+
+object{
+   height: 100%;
+   min-height: 100%;
+}
+
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* Internet Explorer/Edge */
+  user-select: none;           /* Non-prefixed version, currently
+                                  not supported by any browser */
+}
+
+
+
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: hidden; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(30,30,30,0.9); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: rgba(10,10,10,0.9);
+    color: rgb(200,200,200);
+    margin: 50% auto; 
+    padding: 5px;
+
+    border-radius : 6px;
+   /* border: 1px solid #444444;*/
+    width: 100px; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+div.textLabel
+{
+
+    align-self: center;
+    width: 128px;
+    height:18px;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border-radius : 2px;
+    color: #888888;
+    background-color: #353535;
+    border-color: #2c2c2c;
+    background-size: 100%;
+    margin: 1px;
+    overflow:hidden;
+}
+
+button.toolButton
+{
+    background-color: #525252;
+    border-radius: 4px;
+    width:26px;
+    height:22px;
+    border-color: rgba(0,0,0,0);
+    padding:0;
+
+
+
+
+
+    color: #aaaaaa;
+    font-weight: lighter;
+
+
+
+}
+
+button.toolButton:hover
+{
+    background-color: #626262;
+}
+
+button.toolButton:focus
+{
+    outline: none;
+}
+
+input.textStrip
+{
+    padding:0 0 0 4px;
+    background-color:#6c6c6c;
+    border-radius: 8px;
+    height:15px; 
+    border-color:#3c3c3c;
+    vertical-align:bottom;
+    color:#cbcbcb; 
+}
+
+input.textStrip:focus
+{
+    outline:none;
+}

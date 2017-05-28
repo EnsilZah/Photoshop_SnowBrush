@@ -1,0 +1,16 @@
+/*! jQuery UI - v1.9.2 - 2013-01-24
+* http://jqueryui.com
+* Includes: jquery.ui.tabs.css
+* Copyright 2013 jQuery Foundation and other contributors; Licensed MIT */
+.ui-tabs{}.ui-tabs .ui-tabs-nav{}.ui-tabs .ui-tabs-nav li{
+	float: left;
+	color: #555555;
+
+	white-space: nowrap;
+	overflow: hidden;
+	background-image: url(images/button.png);
+}.ui-tabs .ui-tabs-nav li a .ui-tabs .ui-tabs-nav li .ui-tabs-active{background-image: url(images/buttonactive.png); }.ui-tabs .ui-tabs-nav li.ui-tabs-active a,.ui-tabs .ui-tabs-nav li.ui-state-disabled a,.ui-tabs .ui-tabs-nav li.ui-tabs-loading a .ui-tabs .ui-tabs-nav li a,.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-active a{
+	cursor: pointer;
+	font-weight: normal;
+	color: #c5c5c5;
+}.ui-tabs .ui-tabs-panel

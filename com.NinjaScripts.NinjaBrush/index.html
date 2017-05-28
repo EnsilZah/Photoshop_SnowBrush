@@ -1,0 +1,2462 @@
+<!doctype html>
+
+<script src="./js/Theme.js"></script>
+<script src="./lib/CSInterface.js"></script>
+<script src="./jQueryAssets/jquery-1.8.3.min.js"></script>
+
+<script>	
+ 	var fs = require('fs-extra');
+ 	var zipper = require("zip-local");
+
+	var csInterface = new CSInterface();
+	loadJSX("SnowBrush.jsx")
+</script>
+
+<link id="ppstyle" rel="stylesheet" type="text/css" href="./css/style.css">
+
+<html>
+	<head>
+		<meta charset="utf-8">
+	</head>
+
+	<body id="mainBody" onresize="onDocResize()" onLoad="onLoadedDoc();" style="overflow: hidden; padding:0px; margin:0px; height:100%" ondrop='onDrop(event)'>
+
+
+	<div id="myModal" class="modal">
+		<div class="modal-content">
+    		<p id="modalText">Processing</p>
+	    	<img src='images/load.gif' alt='' align='center' style="height:25px; width:25px">
+		</div>
+	</div>
+
+	<div id="modalAbout" class="modal" onclick="document.getElementById('modalAbout').style.display = 'none';">
+		<div class="modal-content" style="width:200px">
+    		<p id="modalText">SnowBrush v0.5</p>
+    		<p id="modalText2" style="font-size:10px">Created by Tammuz Kay at Snowball Studios</p>
+	    	<img src='images/SnowballLogo.png' alt='' align='center' style="height:100%; width:100%">
+		</div>
+	</div>
+
+
+	<div style="padding:0;margin:0">
+
+
+		<div id="ToolBar" oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+
+			<button class="toolButton" onclick="NBPanel.tool.brush.set()">			<img src='images/ToolBrush.png'  alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolPencil.png' onclick="NBPanel.tool.pencil.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolMixBrush.png' onclick="NBPanel.tool.mixbrush.set()" alt='' align='center' style='margin:0'>			</button>
+
+			<button class="toolButton">			<img src='images/ToolErase.png' onclick="NBPanel.tool.erase.set()" alt='' align='center' style='margin:0'>			</button>
+
+			<button class="toolButton">			<img src='images/ToolSharpen.png' onclick="NBPanel.tool.sharpen.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolBlur.png' onclick="NBPanel.tool.blur.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolSmudge.png' onclick="NBPanel.tool.smudge.set()" alt='' align='center' style='margin:0'>			</button>
+
+			<button class="toolButton">			<img src='images/ToolDodge.png'onclick="NBPanel.tool.dodge.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolBurn.png'onclick="NBPanel.tool.burn.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolSponge.png'onclick="NBPanel.tool.sponge.set()" alt='' align='center' style='margin:0'>			</button>
+
+			<button class="toolButton">			<img src='images/toolStamp.png'onclick="NBPanel.tool.stamp.set()" alt='' align='center' style='margin:0'>			</button>
+	
+
+
+		</div>
+
+		<div id="RecentBar" hidden oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+
+			<img src='images/tmpBrushIcons/ThumbShort.png' alt='' align='center' style='width:24px; height:24px'>
+			<img src='images/tmpBrushIcons/ThumbShort_2.png' alt='' align='center' style='width:24px; height:24px'>
+			<img src='images/tmpBrushIcons/ThumbShort_3.png' alt='' align='center' style='width:24px; height:24px'>
+			<img src='images/tmpBrushIcons/ThumbShort_4.png' alt='' align='center' style='width:24px; height:24px'>
+			<img src='images/tmpBrushIcons/ThumbShort_5.png' alt='' align='center' style='width:24px; height:24px'>
+			<img src='images/tmpBrushIcons/ThumbShort_6.png' alt='' align='center' style='width:24px; height:24px'>
+		</div>
+
+
+
+		<div id="SearchBar" oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+
+			<img src='images/search.png' alt='' align='center' style="padding:0 1px 0 3px" >
+			<input id="searchText" type="text" align='center' onkeyup="NBPanel.search.update();" class="textStrip">
+			<button class="toolButton" onclick="NBPanel.search.clear()" style="width:50px;height:15px;position: relative; top:3px">Clear</button>
+		</div>
+
+
+		<div id="TopBar" oncontextmenu="contextDefault()" align = "left" style="overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+			<button id='btn_AddEntry' style="border-color:#303030" onclick="NBPanel.tabs.appendTab('Untitled');" class="TabButton" >+</button>	
+			<button id='btn_Shared' oncontextmenu="event.stopPropagation(); contextSharedTab()" class="TabButton TabShared" style="border-color:#303030"  >Shared </button>	
+		</div>
+
+		<div id="ContainerBar" oncontextmenu="contextDefault()" align = "left" style="position:fixed;width:100%;height:calc(100%);overflow:visible;background-color:#444444;px;margin:0;align:left">
+		</div>
+
+
+		<div id="bottomBar" class="bottomBar" align="left" oncontextmenu="contextDefault()" >
+	
+			 <input class="slider" type="range" id="sizeSlider" value="64" min ="16" max = "64" style = "width:128px;" oninput = "NBPanel.brushes.updateLook()" onchange = "sliderChange()">
+
+
+
+
+		&nbsp;
+			<button id='toggleShortThumb' onclick="NBPanel.settings.setThumbShort(!NBPanel.settings.values.showShortThumb)" class="TabButton" title="Show short thumbnail" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
+				<img src='images/Button_ShortThumb.png' alt='' align='left' style="opacity:0.8"/>
+			</button>
+
+ 		&nbsp;
+
+			<button id='toggleLongThumb' onclick="NBPanel.settings.setThumbLong(!NBPanel.settings.values.showLongThumb)" class="TabButton" title="Show long thumbnail" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
+				<img src='images/Button_LongThumb.png' alt='' align='left' style="opacity:0.8"/>
+			</button>
+
+			<button id='toggleTxt' onclick="NBPanel.settings.setTxt(!NBPanel.settings.values.showText)" class="TabButton" title="Show brush name" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
+				<img src='images/Button_TXT.png' alt='' align='left' style="opacity:0.8"/>
+			</button>
+
+			<button id='toggleColor' onclick="NBPanel.settings.setColor(!NBPanel.settings.values.useColor)" class="TabButton" title="Use color" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
+				<img src='images/Button_ColorChange.png' alt='' align='left' style="opacity:0.8"/>
+			</button>
+
+
+	 		&nbsp;
+
+			<button id='btn_AddTool' onclick="AddCurrentTool()" class="TabButton" title="Add current" style="position:relative; margin-left:5px; top:-7px; border-radius:0; height:15px; overflow:hidden; " >
+				<img src='images/AddBrush03.png' alt='' align='left' style="opacity:.5"/>
+			</button>
+
+			<button id='btn_AddFromFile' onclick="AddFromFile()" class="TabButton" title="Import File" style="position:relative; top:-7px; border-radius:0; height:15px; overflow:hidden; " >
+				<img src='images/AddFile03.png' alt='' align='left' style="opacity:.5"/>
+			</button>
+<!--
+			<button id='btn_Export' align='right' onclick="exportAll();" class="TabButton" title="Export File" style="position:relative;top:-7px; border-radius:0; width:22px; height:15px; overflow:hidden; " >
+				<img src='images/export.png' alt='' align='left' style="opacity:.5"/>
+			</button>
+-->
+
+		</div>
+	</div>
+
+
+	</body>
+</html>
+
+
+
+
+<script>
+
+
+//Prevent drag-select
+document.onselectstart = function(e)
+{
+    if(e.stopPropagation) e.stopPropagation();
+    if(e.preventDefault) e.preventDefault();
+    e.cancelBubble=true;
+    e.returnValue=false;
+    return false;
+};
+
+
+
+function onDocResize()
+{
+	var containerBar = document.getElementById("ContainerBar")
+
+	var nodes = Array.prototype.slice.call( containerBar.parentElement.children );
+
+	var curElement = nodes.indexOf( containerBar );
+	var heightOffest = 0
+	for (var i = 0; i < nodes.indexOf( containerBar ); i++)
+	{
+		heightOffest += containerBar.parentElement.children[i].offsetHeight
+	}
+
+
+	//var bottomOffest = 0;
+
+	//Make sure ContainerBar fills the same area as tab bar pushes it down.
+	containerBar.style.top=heightOffest+"px"
+	containerBar.style.height = document.body.scrollHeight + 24 - heightOffest + "px"
+}
+
+
+window.addEventListener("dragover",function(e){e = e || event; e.preventDefault();},false);
+window.addEventListener("drop",function(e){e = e || event; e.preventDefault();},false);
+
+var NBPanel = null;
+
+function runJSX (inCommand, inCallback)
+{
+	var jsonCommand = "JSON.stringify (" + inCommand + ");"  
+	csInterface.evalScript (jsonCommand, function(retVal) {inCallback(JSON.parse(retVal))});
+}
+
+function onLoadedDoc()
+{
+	NBPanel = new SnowBrushPanel();
+	NBPanel.initialize();
+	onDocResize();
+
+
+	function checkOverflow(el)
+	{
+	   var curOverflow = el.style.overflow;
+
+	   if ( !curOverflow || curOverflow === "visible" )
+	      el.style.overflow = "hidden";
+
+	   var isOverflowing = el.clientWidth < el.scrollWidth 
+	      || el.clientHeight < el.scrollHeight;
+
+	   el.style.overflow = curOverflow;
+
+	   return isOverflowing;
+	}
+
+	var lastTab = NBPanel.brushGroups.brushGroup[NBPanel.brushGroups.brushGroup.length -1].tabButton
+
+}
+
+
+function onShareChanged (event, filename)
+{
+	 NBPanel.sharedTab.refresh();
+}
+
+
+function setShareLocation()
+{
+	var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Share Location:", null,null, "Open Share Path").data;
+	if (currentFile == null || currentFile == "") return;
+
+	fs.unwatchFile(NBPanel.settings.values.shareLocation + "/manifest.json")
+	NBPanel.settings.values.shareLocation = currentFile;
+	NBPanel.settings.write();
+
+	fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, onShareChanged);
+	onShareChanged()
+}
+
+
+function AddFromFile()
+{
+
+	var curFile = ""
+
+
+	var currentFile = window.cep.fs.showOpenDialogEx(false,false,"Brush File:", "%USERPROFILE%/Desktop",["abr","tpl","zip"], "Brush Files").data;
+	if (currentFile == "") return;
+	
+	openModal("Processing...")
+
+
+	curFile = currentFile[0];
+
+	var command = ""
+
+	var curExtension = curFile.substring(curFile.lastIndexOf(".")+1).toLowerCase()
+
+	switch(curExtension)
+	{
+	
+		case "abr":
+			command = "entriesFromABR('" + curFile + "', '" + doubleDashes(NBPanel.entriesPath) +"')"
+			break;
+		case "tpl":
+			command = "entriesFromTPL('" + curFile + "', '" +  doubleDashes(NBPanel.tempPath) + "', '" + doubleDashes(NBPanel.entriesPath) +"')"
+			break;
+	
+		case "zip":
+			importZip(curFile);
+			return;
+			break;
+
+		default:
+			alert("Error importing file!")
+			return;
+
+	}
+
+	runJSX(command, function(retVal)
+	{
+		
+		var curTab = NBPanel.tabs.tabList[NBPanel.tabs.activeTab]
+
+		for (var i = 0; i < retVal.length; i++)
+		{	
+				curTab.data.brushes.push(retVal[i])
+				NBPanel.tabs.tabCurrent().appendBrush(retVal[i])
+		}
+
+		NBPanel.tabs.tabCurrent().writeFile()		
+		NBPanel.brushes.updateLook()
+		closeModal()
+	})
+}
+
+
+
+// Exports a single brush
+function exportBrush(inBrushID)
+{
+
+	var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Export Location:", null,null, "EXPORT HERE").data;
+	if (currentFile == "" ) {return;}
+
+	openModal("Processing...")
+
+	var tmpFolder = NBPanel.tempPath + "/zip"
+
+	fs.removeSync(tmpFolder);
+	fs.mkdirSync(tmpFolder);
+
+	
+    var manifestFile = tmpFolder + "/NB_Manifest.json"
+    var manifestData = {name:"NB_Manifest", version:"0002", type:"SINGLEBRUSH"}
+	fs.writeFileSync(manifestFile, JSON.stringify(manifestData))
+
+    var pathTempEntries = tmpFolder + "/Entries"
+	fs.mkdirSync(pathTempEntries);
+
+
+	var newEntryID = getEntryInc(pathTempEntries)
+	var savePath = pathTempEntries+"/" + newEntryID
+	fs.mkdirSync(savePath);
+
+
+	var entryPath = NBPanel.entriesPath + inBrushID;
+	fs.copySync(entryPath, savePath)
+
+
+ 	var sourcePath = tmpFolder
+ 	var inBrushName = NBPanel.brushes.brush(inBrushID).tabEntry.data.name
+ 	var destPath = currentFile+"/" + "NBBRUSH_" + inBrushName + ".zip"
+
+	zipper.zip(sourcePath, function(error, zipped)
+	{
+		if (error)
+		{alert("Error compressing file.");fs.removeSync(tmpFolder); return;}
+
+        zipped.compress(); 		 
+        zipped.save(destPath, function(error)
+        {
+        	fs.removeSync(tmpFolder);
+        	if (error)
+			{alert("Error saving file.");return;}
+    		closeModal()
+        });
+	});
+
+
+}
+
+function exportTab(inTabID)
+{
+	var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Export Location:", null,null, "EXPORT HERE").data;
+	if (currentFile == "" ) {closeModal(); return;}
+
+	openModal("Processing...")
+
+	//Create temp zip folder
+	var tmpFolder = NBPanel.tempPath + "/zip"
+	fs.removeSync(tmpFolder);
+	fs.mkdirSync(tmpFolder);
+
+	//Create manifest file
+    var manifestFile = tmpFolder + "/NB_Manifest.json"
+    var manifestData = {name:"NB_Manifest", version:"0002", type:"SINGLETAB"}
+	fs.writeFileSync(manifestFile, JSON.stringify(manifestData))
+
+	//Copy tab data
+    var pathTempTabs = tmpFolder + "/Tabs"
+    fs.mkdirSync(pathTempTabs);
+    fs.copySync(NBPanel.tabsPath + "/" + inTabID, pathTempTabs + "/00000000")
+ 
+
+    var pathTempEntries = tmpFolder + "/Entries"
+	fs.mkdirSync(pathTempEntries);
+
+
+
+	var brushIDs = NBPanel.tabs.tab(inTabID).getBrushIDs()
+	for (var i = 0; i < brushIDs.length; i++)
+	{
+		var newEntryID = getEntryInc(pathTempEntries)
+		var savePath = pathTempEntries+"/" + newEntryID
+		fs.mkdirSync(savePath);		
+
+		var entryPath = NBPanel.entriesPath + brushIDs[i];
+		fs.copySync(entryPath, savePath)
+	}
+
+	var sourcePath = tmpFolder
+ 	var destPath = currentFile+"/" + "NBTAB_" + NBPanel.tabs.tab(inTabID).name + ".zip"
+	zipper.zip(sourcePath, function(error, zipped)
+	{
+		if (error)
+		{alert("Error compressing file.");fs.removeSync(tmpFolder); return;}
+
+        zipped.compress(); 		 
+        zipped.save(destPath, function(error)
+        {
+        	fs.removeSync(tmpFolder);
+        	if (error)
+			{alert("Error saving file.");return;}
+    		closeModal()
+        });
+	});
+
+	return;
+}
+
+function importZip(inPath)
+{
+	var tmpFolder = NBPanel.dataPath + "temp/unzip"
+	fs.removeSync(tmpFolder);
+	fs.mkdirSync(tmpFolder);
+
+	zipper.sync.unzip(inPath).save(tmpFolder)
+
+	var ManifestFilename = "NB_Manifest.json"
+
+	try
+	{
+		curManifest = JSON.parse(fs.readFileSync(tmpFolder+"/"+ManifestFilename, 'utf8'));
+	}
+	catch(e)
+	{
+		fs.removeSync(tmpFolder);
+		return;
+	}
+
+	switch(curManifest.type)
+	{
+		case "SINGLEBRUSH":
+			importSingleEntry(tmpFolder)
+			break;
+
+		case "SINGLETAB":
+			importSingleTab(tmpFolder)
+			break;
+
+		default:
+			alert("Manifest Error");
+	}
+}
+
+function importSingleEntry(inPath_Temp)
+{
+	openModal("Processing...")
+
+	var newEntryID = getEntryInc(NBPanel.entriesPath)
+	var curPath = NBPanel.entriesPath + "/" + newEntryID
+	fs.mkdirSync(curPath);
+	fs.copySync(inPath_Temp+"/Entries/00000000", curPath)
+
+	NBPanel.tabs.tabCurrent().listTab.data.brushes.push(newEntryID)
+	NBPanel.tabs.tabCurrent().writeFile()
+	NBPanel.tabs.tabCurrent().appendBrush(newEntryID)
+	NBPanel.brushes.brush(newEntryID).saveFile()
+	fs.removeSync(NBPanel.tempPath + "/unzip");
+	closeModal()
+}
+
+function importSingleTab(inPath_Temp)
+{
+	openModal("Processing...")
+
+	var curEntries = fs.readdirSync(inPath_Temp + "/Entries")
+    var newIDs = []
+
+    for (var i = 0; i < curEntries.length;i++)
+    {
+        var newEntryID = getEntryInc(NBPanel.entriesPath)
+        newIDs.push(newEntryID)
+    	fs.copySync(inPath_Temp + "/Entries/" + curEntries[i], NBPanel.entriesPath + "/" + newEntryID)
+    }
+	var tabName = JSON.parse(fs.readFileSync(inPath_Temp+ "/Tabs/00000000", 'utf8')).name
+	NBPanel.tabs.appendTab(tabName, false)
+
+	for (var i = 0; i < newIDs.length; i++)
+	{
+		NBPanel.tabs.tabCurrent().listTab.data.brushes.push(newIDs[i])
+		NBPanel.tabs.tabCurrent().appendBrush(newIDs[i])
+		NBPanel.brushes.brush(newIDs[i]).saveFile()			
+	}
+	NBPanel.tabs.tabCurrent().writeFile()
+
+	closeModal()
+}
+
+function AddCurrentTool()
+{
+	openModal("Processing...")
+	csInterface.evalScript("getCurrentTool()", function(retVal1)
+	{
+		if (retVal1 != "paintbrushTool")
+			return;
+
+			var command = "createEntryFromExisting('" + NBPanel.entriesPath +"')"
+
+			runJSX(command, function(retVal)
+			{
+				NBPanel.tabs.tabCurrent().listTab.data.brushes.push(retVal)
+				NBPanel.tabs.tabCurrent().writeFile()
+				NBPanel.tabs.tabCurrent().appendBrush(retVal)
+				closeModal()
+			})
+	})
+}
+
+
+function SnowBrushPanel()
+{
+	this.dataPath = csInterface.getSystemPath(SystemPath.MY_DOCUMENTS) + "/SnowBrush/";
+	this.tabsPath = this.dataPath + "Tabs/"
+	this.tempPath = this.dataPath + "Temp/"
+	this.entriesPath = this.dataPath + "Entries/"
+
+
+	this.search=
+	{
+		brushGroup:null,
+		textElement:document.getElementById("searchText"),
+
+		clear:function()
+		{
+			this.textElement.value = ""
+			this.update();
+		},
+
+		update:function()
+		{
+			
+			if (this.textElement.value == "")
+			{
+
+				this.brushGroup.style.display = "none"
+			}
+			else
+			{
+				this.brushGroup.style.display = "block"
+				this.populate();
+			}
+		},
+
+		populate:function()
+		{
+			while (this.brushGroup.firstChild) 
+			{
+    			this.brushGroup.removeChild(this.brushGroup.firstChild);
+			}
+//xxx
+/*
+				{
+					var newButton = NBPanel.brushes.createBrushButton(inBrushID)
+					var brushData = JSON.parse(fs.readFileSync(NBPanel.entriesPath+"/"+inBrushID+"/Entry.json", 'utf8'))				
+					this.listTab.brushes.push({data:brushData, id:inBrushID, button:newButton, update:updateLook})*/
+
+					var searchString = this.textElement.value.toLowerCase()
+
+				for (var i = 0; i < NBPanel.tabs.tabList.length; i++)
+				{
+					for (var j = 0; j < NBPanel.tabs.tabList[i].brushes.length; j++)
+					{
+						if (NBPanel.tabs.tabList[i].brushes[j].data.name.toLowerCase().indexOf(searchString) == -1) continue;
+
+					//	var copyButton = NBPanel.tabs.tabList[i].brushes[j].button.cloneNode(true)
+
+						var copyButton = $(NBPanel.tabs.tabList[i].brushes[j].button).clone(true,true)[0]
+
+
+						copyButton.firstChild.onclick = NBPanel.tabs.tabList[i].brushes[j].button.firstChild.onclick
+						this.brushGroup.appendChild(copyButton);
+					}
+				}
+
+
+
+		},
+
+		init:function()
+		{
+			
+			//create tab body
+		    var brushGroupElement = document.createElement("div");
+			brushGroupElement.id = "searchResultBrushGroup"
+			brushGroupElement.className = "scroll"
+			document.getElementById("ContainerBar").appendChild(brushGroupElement)
+			NBPanel.sharedTab.tabBody = brushGroupElement;
+
+			this.brushGroup = brushGroupElement;
+			brushGroupElement.style.display = "none"
+		},
+	}
+
+
+
+	this.tool=
+	{
+		blur:
+		{
+			id:"BlTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},	
+		},
+
+		brush:
+		{
+			id:"PbTl",
+			set:function()
+			{	
+
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},		
+		},
+
+		burn:
+		{
+			id:"BrTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		dodge:
+		{
+			id:"DdTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		erase:
+		{
+			id:"ErTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+
+		mixbrush:
+		{
+			id:"MixB",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		pencil:
+		{
+			id:"PcTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		sharpen:
+		{
+			id:"ShTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		smudge:
+		{
+			id:"SmTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		sponge:
+		{
+			id:"SrTl",
+			set:function()			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+		stamp:
+		{
+			id:"ClTl",
+			set:function()
+			{			
+				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
+			},				
+		},
+	}
+
+	this.brushes=
+	{
+		activeBrush:null,
+
+		setBrushColor:function(inBrush, isFG)
+		{
+			if (!NBPanel.settings.values.useColor) return;
+
+			var curElement = inBrush.tabEntry.button.childNodes[1].childNodes[0].childNodes[isFG?0:1] //Pick FG/BG childnode
+			var tabEntry = inBrush.tabEntry;
+			var id = inBrush.tabEntry.id
+			
+			runJSX("pickColor()", function(retVal)
+			{
+				if (retVal == null) return;
+				curElement.style.backgroundColor ="rgb("+Math.floor(retVal.red)+","+Math.floor(retVal.green)+","+Math.floor(retVal.blue)+")"
+				if (isFG)
+				{
+					tabEntry.data.colorFG = retVal;		
+				}
+				else //BG
+				{
+					tabEntry.data.colorBG = retVal;	
+				}
+
+				inBrush.saveFile()
+				inBrush.tabEntry.button.childNodes[0].onclick();
+
+			})
+		},
+
+		brush:function(inID)
+		{
+			var tabEntry = null;
+			var tabIndex = null;
+			var brushIndex = null;
+			var element = null;	
+
+			for (var i = 0; i < NBPanel.tabs.tabList.length; i++)
+			{
+				for (var j = 0; j < NBPanel.tabs.tabList[i].brushes.length; j++)
+				{
+					if (NBPanel.tabs.tabList[i].brushes[j].id == inID)
+					{
+						tabIndex = i;
+						brushIndex = j;
+					} 
+				}
+			}
+
+			var retBrush =
+			{
+				id:inID,
+				tabEntry:NBPanel.tabs.tabList[tabIndex].brushes[brushIndex],
+				tabIndex:tabIndex,
+				brushIndex:brushIndex,
+				element:NBPanel.tabs.tabList[tabIndex].brushes[brushIndex].button,
+
+
+				saveFile:function()
+				{
+					fs.writeFileSync( NBPanel.entriesPath + "/" + this.id + "/" + "Entry.json", JSON.stringify(this.tabEntry.data));			
+				},
+
+				setColorBG:function()
+				{
+					NBPanel.brushes.setBrushColor(this,false)
+				},
+
+				setColorFG:function()
+				{
+					NBPanel.brushes.setBrushColor(this,true)
+				},
+
+				moveToTab:function(inTabID)
+				{
+					var sourceTab = NBPanel.tabs.tabList[this.tabIndex]
+					var destTab = NBPanel.tabs.getTabById(inTabID)
+
+					destTab.brushGroup.insertAdjacentElement("beforeend",this.element)
+
+					destTab.brushes.push(sourceTab.brushes[this.brushIndex])
+					destTab.data.brushes.push(sourceTab.data.brushes[this.brushIndex])
+
+					sourceTab.brushes.splice(this.brushIndex, 1)
+					sourceTab.data.brushes.splice(this.brushIndex, 1)
+
+					NBPanel.tabs.tab(sourceTab.data.id).writeFile()
+					NBPanel.tabs.tab(destTab.data.id).writeFile()
+				},
+
+				copyToShared:function()
+				{
+					openModal("Processing...")
+					NBPanel.sharedTab.appendBrush(this)
+					setTimeout(function()
+					{
+						closeModal();
+					}, 250); 
+				},
+
+				remove:function()
+				{
+					var BPreset = "SB_Entry:" + this.id
+
+					fs.remove(NBPanel.entriesPath+"/"+this.id)													//delete brush entry folder
+					csInterface.evalScript("ToolPresets.removePresetByName('"+BPreset+"')");					//delete brush preset
+					removeElement(this.element)																	//remove brush html element
+					NBPanel.tabs.tabList[this.tabIndex].brushes.splice(this.brushIndex, 1)						//remove brush from tab list
+					NBPanel.tabs.tabList[this.tabIndex].data.brushes.splice(this.brushIndex, 1)					//remove brush from tab brushes
+					NBPanel.tabs.tabIndex(this.tabIndex).writeFile()											//save tab
+					
+				},
+
+			}
+
+			return retBrush
+		},
+
+		createBrushButtonShared:function(inPath, inID)
+		{
+			var brushData = JSON.parse(fs.readFileSync(inPath+"/Entry.json", 'utf8'))
+
+			var stringFG = "JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorFG)"
+			var stringBG ="JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorBG)"
+			var inScript = "setEntryPath('" + inPath + "/Entry.tpl" + "'," + stringFG + "," + stringBG + ")";
+
+
+
+
+
+
+			var inName = inID;
+			var inDisplayName = brushData.name;
+		    var btnGrp = document.createElement("div");
+		    btnGrp.draggable = "true"
+			btnGrp.className = "BrushHolder"
+	
+			var btn = document.createElement("BUTTON");
+			btn.className = "BrushButton"
+			btn.value = inName
+			btn.onclick = function(){eval(inScript)}
+			btn.oncontextmenu = function(event){event.stopPropagation(); contextSharedBrush(this.value)}
+			btnGrp.appendChild(btn);
+
+
+		
+
+
+
+			var squareThumb = "url("+ encodeURI(inPath+"/ThumbShort.png")+"?" + new Date().getTime()  + ")"
+			var longThumb = "url("+ encodeURI(inPath+"/ThumbLong.png")+"?" + new Date().getTime()  + ")"
+			btn.style.width = "322px"
+			btn.style.backgroundImage = squareThumb +"," + longThumb
+			btn.style.backgroundPosition = "left top, right top"
+			btn.style.backgroundSize = "64px 64px, 256px 64px "
+			btn.style.backgroundRepeat = "no-repeat, no-repeat"
+
+
+
+
+
+			//Button Name text
+			var btn_Edit = document.createElement("input");
+			btn_Edit.type = "text"
+			btn_Edit.spellcheck="false"
+			btn_Edit.value = inDisplayName
+			btn_Edit.className = "editTab"
+			btn_Edit.id = "btn_Edit_" + inName
+			btn_Edit.disabled = "disabled"
+
+			btn_Edit.onkeydown = function(event)
+			{
+				switch(event.keyCode)
+				{
+					case 13: //Enter
+						this.disabled = "disabled"
+						this.dataset.oldvalue = this.value
+
+						var curID = this.id.substring(9)
+						var curBrush = NBPanel.sharedTab.brush(curID);
+						curBrush.tabEntry.data.name = this.value
+						curBrush.saveFile();
+						NBPanel.sharedTab.saveFile();
+						break;
+
+					case 27: //Esc
+						this.disabled = "disabled"
+						this.value = this.dataset.oldvalue
+						break;
+				}
+			}
+
+			btn_Edit.onblur = function()
+			{
+				this.disabled = "disabled"
+				this.value = this.dataset.oldvalue
+			}
+
+
+			//Text lable group
+			var textLabel = document.createElement("div");
+			textLabel.className = "textLabel"
+
+
+
+
+
+			// Color buttons
+			var colorsGroup = document.createElement("span")
+			textLabel.appendChild(colorsGroup)
+			colorsGroup.style.marginRight = "10px"
+			var colorDefault = "#444444"
+
+			var colorL = document.createElement("button")
+			colorL.className = "ColorDotLeft"
+
+			colorL.onclick = function()
+			{
+				NBPanel.brushes.setBrushColor(NBPanel.sharedTab.brush(inID),true)
+
+			}
+
+			if (brushData.colorFG == null)
+			{colorL.style.backgroundColor = colorDefault}
+			else
+			{colorL.style.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"}
+			colorsGroup.appendChild(colorL)
+
+
+
+			var colorR = document.createElement("button")
+			colorR.className = "ColorDotRight"
+			colorR.onclick = function()
+			{
+				NBPanel.brushes.setBrushColor(NBPanel.sharedTab.brush(inID),false)
+			}
+			if (brushData.colorBG == null)
+			{colorR.style.backgroundColor = colorDefault}
+			else
+			{colorR.style.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"}
+			colorsGroup.appendChild(colorR)
+
+
+
+			textLabel.appendChild(btn_Edit)
+
+			textLabel.ondblclick = function()
+			{
+				this.childNodes[1].disabled = ""
+				this.childNodes[1].setAttribute("data-oldvalue", this.childNodes[1].value)
+				this.childNodes[1].focus()
+			}
+
+			btnGrp.appendChild(textLabel);
+
+				btnGrp.draggable = "true"
+			btnGrp.ondragstart = function(event){brushDrag(event)}
+			btnGrp.id = "Shared_brs_" + inName
+			btnGrp.ondragover =  function(event){brushDragOver(event)}
+			btnGrp.ondragend = function(event){brushSharedDragEnd(event)}
+			return btnGrp;
+		},
+
+		createBrushButton:function(inBrushID)
+		{
+
+			var brushData = JSON.parse(fs.readFileSync(NBPanel.entriesPath+"/"+inBrushID+"/Entry.json", 'utf8'))
+
+			var stringFG = "JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorFG)"
+			var stringBG ="JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorBG)"
+			var stringPath = NBPanel.entriesPath+"/"+inBrushID+"/Entry.tpl"
+			var inScript = "setEntryPath('" + stringPath + "'," + stringFG + "," + stringBG + ")";
+
+
+
+
+			var inName = inBrushID;
+			var inDisplayName = brushData.name;
+		    var btnGrp = document.createElement("div");
+		    btnGrp.draggable = "true"
+			btnGrp.className = "BrushHolder"
+
+
+
+
+
+
+
+
+			var btn = document.createElement("BUTTON");
+			btn.className = "BrushButton"
+			btn.value = inName
+			btn.onclick = function(){eval(inScript)}
+			btn.oncontextmenu = function(event){event.stopPropagation(); contextBrush(this.value)}
+			btnGrp.appendChild(btn);
+
+
+			
+
+
+
+			var squareThumb = "url("+ encodeURI(NBPanel.entriesPath+"/"+inBrushID+"/ThumbShort.png")+"?" + new Date().getTime()  + ")"
+			var longThumb = "url("+ encodeURI(NBPanel.entriesPath+"/"+inBrushID+"/ThumbLong.png")+"?" + new Date().getTime()  + ")"
+			btn.style.width = "322px"
+			btn.style.backgroundImage = squareThumb +"," + longThumb
+			btn.style.backgroundPosition = "left top, right top"
+			btn.style.backgroundSize = "64px 64px, 256px 64px "
+			btn.style.backgroundRepeat = "no-repeat, no-repeat"
+
+
+
+
+
+			//Button Name text
+			var btn_Edit = document.createElement("input");
+			btn_Edit.type = "text"
+			btn_Edit.spellcheck="false"
+			btn_Edit.value = inDisplayName
+			btn_Edit.className = "editTab"
+			btn_Edit.id = "btn_Edit_" + inName
+			btn_Edit.disabled = "disabled"
+
+			btn_Edit.onkeydown = function(event)
+			{
+				switch(event.keyCode)
+				{
+					case 13: //Enter
+						this.disabled = "disabled"
+						this.dataset.oldvalue = this.value
+
+						var curID = this.id.substring(9)
+						var curBrush = NBPanel.brushes.brush(curID);
+						curBrush.tabEntry.data.name = this.value
+						curBrush.saveFile();
+						break;
+
+					case 27: //Esc
+						this.disabled = "disabled"
+						this.value = this.dataset.oldvalue
+						break;
+				}
+
+			}
+
+			btn_Edit.onblur = function()
+			{
+				this.disabled = "disabled"
+				this.value = this.dataset.oldvalue
+			}
+
+
+
+
+
+			//Text lable group
+			var textLabel = document.createElement("div");
+			textLabel.className = "textLabel"
+
+
+
+
+
+			// Color buttons
+			var colorsGroup = document.createElement("span")
+			textLabel.appendChild(colorsGroup)
+			colorsGroup.style.marginRight = "10px"
+			var colorDefault = "#444444"
+
+			var colorL = document.createElement("button")
+			colorL.className = "ColorDotLeft"
+			colorL.onclick = function()
+			{
+				var curBrush = NBPanel.brushes.brush(inBrushID).setColorFG()
+			}
+			if (brushData.colorFG == null)
+			{colorL.style.backgroundColor = colorDefault}
+			else
+			{colorL.style.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"}
+			colorsGroup.appendChild(colorL)
+
+
+
+			var colorR = document.createElement("button")
+			colorR.className = "ColorDotRight"
+			colorR.style.backgroundColor = "rgb("+ Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) +")"
+			colorR.onclick = function()
+			{
+				var curBrush = NBPanel.brushes.brush(inBrushID).setColorBG()
+			}
+			if (brushData.colorBG == null)
+			{colorR.style.backgroundColor = colorDefault}
+			else
+			{colorR.style.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"}
+			colorsGroup.appendChild(colorR)
+
+
+
+
+
+			textLabel.appendChild(btn_Edit)
+
+			textLabel.ondblclick = function()
+			{
+				this.childNodes[1].disabled = ""
+				this.childNodes[1].setAttribute("data-oldvalue", this.childNodes[1].value)
+				this.childNodes[1].focus()
+			}
+
+
+
+
+			btnGrp.appendChild(textLabel);
+
+			btnGrp.draggable = "true"
+			btnGrp.ondragstart = function(event){brushDrag(event)}
+			btnGrp.id = "brs_" + inName
+			btnGrp.ondragover =  function(event){brushDragOver(event)}
+			btnGrp.ondragend = function(event){brushDragEnd(event)}
+			return btnGrp;
+		},
+
+		updateLook:function()
+		{
+			var sliderValue = document.getElementById("sizeSlider").value
+			var curTabs = NBPanel.tabs.tabList
+
+			for (var i = 0; i < NBPanel.sharedTab.brushList.length; i++)
+			{
+				NBPanel.sharedTab.brushList[i].update(sliderValue);
+			}
+
+
+
+			for (var i = 0; i < curTabs.length; i++)
+			{
+				for (var j = 0; j < curTabs[i].brushes.length; j++)
+				{
+					curTabs[i].brushes[j].update(sliderValue);
+				}
+			}
+		},
+
+	}
+
+
+	this.sharedTab=
+	{
+		brushList:[],
+		tabButton:null,
+		tabBody:null,
+
+
+		brush:function(inID)
+		{
+			var curIndex = null
+
+			for (var i = 0; i < this.brushList.length; i++)
+			{
+				if (inID == this.brushList[i].id)
+				{
+					curIndex = i;
+					break;
+				}
+			}
+
+			var retBrush = 
+			{
+				id:inID,
+				index:curIndex,
+				brushIndex:curIndex,
+				tabEntry:NBPanel.sharedTab.brushList[curIndex],
+				element:NBPanel.sharedTab.brushList[curIndex].button,
+
+				saveFile:function()
+				{
+					fs.writeFileSync( NBPanel.settings.values.shareLocation + "/entries/" + this.id + "/Entry.json", JSON.stringify(this.tabEntry.data));			
+				},
+
+				removeBrush:function()
+				{
+					removeElement(this.tabEntry.button)
+					NBPanel.sharedTab.brushList.splice(this.index,1)
+					NBPanel.sharedTab.saveFile();
+					fs.removeSync(NBPanel.settings.values.shareLocation+ "/entries/" + this.id)
+				},
+
+				copyToTab:function (inTab)
+				{
+					openModal("Processing...")
+
+					var newEntryID = getEntryInc(NBPanel.entriesPath)
+
+					var curPath = NBPanel.entriesPath + "/" + newEntryID
+					fs.mkdirSync(curPath);
+					fs.copySync(NBPanel.settings.values.shareLocation + "/entries/" + this.id, curPath)
+
+
+					NBPanel.tabs.tab(inTab).listTab.data.brushes.push(newEntryID)
+					NBPanel.tabs.tab(inTab).writeFile()
+					NBPanel.tabs.tab(inTab).appendBrush(newEntryID)
+					NBPanel.brushes.brush(newEntryID).saveFile()
+
+					setTimeout(function()
+					{
+						closeModal();
+					}, 250); 
+				},
+			}
+
+			return retBrush
+
+		},
+
+		init:function()
+		{
+			//create tab body
+		    var brushGroup = document.createElement("div");
+			brushGroup.id = "sharedTabBrushGroup"
+			brushGroup.className = "scroll"
+			document.getElementById("ContainerBar").appendChild(brushGroup)
+			NBPanel.sharedTab.tabBody = brushGroup;
+
+
+			//Set tabness
+			var sharedTabButton = document.getElementById("btn_Shared")
+			sharedTabButton.dataset.id = "SHARED"
+			sharedTabButton.onclick = function()
+			{
+				if (this.childNodes[0].disabled != "")
+				{
+					NBPanel.tabs.tab(this.dataset.id).setActive()
+				}
+			}
+			sharedTabButton.ondrop = function(event){tabSharedOnDrop(event)}
+
+
+			NBPanel.sharedTab.tabButton = sharedTabButton;
+
+
+			this.loadEntries();
+
+
+
+			fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, onShareChanged);
+		},
+
+		loadEntriesNoManifest:function()
+		{
+			var shareLocation = NBPanel.settings.values.shareLocation
+			try
+			{
+				var fileList = fs.readdirSync(shareLocation+ "/entries")
+			}
+			catch(e)
+			{
+				return // No entries found
+			}
+
+
+			for (var i = 0; i < fileList.length; i++)
+			{
+				NBPanel.sharedTab.createBrush(fileList[i])
+			}
+		},
+
+		loadEntries:function()
+		{
+			var shareLocation = NBPanel.settings.values.shareLocation
+			try
+			{
+				var brushList = JSON.parse(fs.readFileSync(shareLocation+ "/manifest.json")).brushes
+
+			}
+			catch(e)
+			{
+				return // No entries found
+			}
+
+			for (var i = 0; i < brushList.length; i++)
+			{
+				NBPanel.sharedTab.createBrush(brushList[i])
+			}			
+		},
+
+		refresh:function()
+		{
+
+			while (NBPanel.sharedTab.brushList.length > 0)
+			{
+				var curBrush = NBPanel.sharedTab.brushList.pop()
+				removeElement(curBrush.button)
+			}
+
+			this.loadEntries();
+
+			NBPanel.brushes.updateLook()
+		},
+
+		createBrush:function(inID)
+		{
+			var shareLocation = NBPanel.settings.values.shareLocation
+			var brushData = JSON.parse(fs.readFileSync(shareLocation+"/entries/"+inID+"/Entry.json", 'utf8'))		
+
+			var newButton = NBPanel.brushes.createBrushButtonShared(shareLocation+"/entries/"+inID, inID)
+			NBPanel.sharedTab.tabBody.appendChild(newButton)
+
+			var curBrushData = {id: inID, button:newButton, update:updateLook, data:brushData}
+			NBPanel.sharedTab.brushList.push(curBrushData)				
+		},
+
+		appendBrush:function(inBrush)
+		{
+			var shareLoc = NBPanel.settings.values.shareLocation + "/Entries/"
+			fs.ensureDirSync(shareLoc);
+			var newID =  getEntryInc(shareLoc)
+				
+			fs.copySync(NBPanel.entriesPath + "/" + inBrush.id, shareLoc + newID)
+
+			NBPanel.sharedTab.createBrush(newID)
+
+			this.saveFile();
+			NBPanel.brushes.updateLook()
+		},
+
+		getList:function()
+		{
+			var curList = []
+
+			for (var i = 0; i < NBPanel.sharedTab.brushList.length; i++)
+			{
+				curList.push(NBPanel.sharedTab.brushList[i].id)
+			}
+			return curList;
+
+		},
+
+		saveFile:function()
+		{
+
+			if (!fs.existsSync(NBPanel.settings.values.shareLocation + "/")) return;			
+
+			data = {brushes:this.getList()}
+			fs.outputFileSync(NBPanel.settings.values.shareLocation + "/manifest.json" , JSON.stringify(data));
+
+		},
+		
+		setActive:function()
+		{
+
+			document.getElementById("btn_AddFromFile").disabled = "disabled"
+			document.getElementById("btn_AddFromFile").childNodes[1].style.opacity = 0.1
+			document.getElementById("btn_AddTool").disabled = "disabled"
+			document.getElementById("btn_AddTool").childNodes[1].style.opacity = 0.1
+
+
+			NBPanel.tabs.activeTab = "SHARED"
+
+			for(var i = 0; i < NBPanel.tabs.tabList.length; i++)
+			{
+					NBPanel.tabs.tabList[i].brushGroup.style.display = "none"
+					NBPanel.tabs.tabList[i].button.className = "TabButton"					
+			}
+
+			NBPanel.sharedTab.tabBody.display = "block"
+			NBPanel.sharedTab.tabButton.className = "TabButton_Selected TabShared"	
+
+			NBPanel.tabs.writeTabListFile();
+			NBPanel.sharedTab.tabButton.focus();
+		},
+	
+	
+	}
+
+
+
+	this.tabs=
+	{				
+		tabList:[],
+		tabListFile: "TabList.json",
+		activeTab:0,
+
+		init:function()
+		{
+	
+			this.readTabListFile();
+			this.tabCurrent().setActive()
+		},
+
+
+		readTabListFile:function()
+		{
+			try
+			{
+
+				var tabData = JSON.parse(fs.readFileSync(NBPanel.dataPath + "/" +  this.tabListFile, 'utf8'));
+				this.activeTab = tabData.active;
+				
+				for(var i = 0; i < tabData.tabs.length; i++)
+				{
+					var curTabData =  JSON.parse( fs.readFileSync(NBPanel.tabsPath + "/" + tabData.tabs[i]) )
+					this.tabList.push({data:curTabData, brushes:[]})
+				}
+
+				for(var i = 0; i < this.tabList.length; i++)
+				{
+					
+					this.appendTabElement(this.tabList[i])
+					
+					for (var j = 0; j < this.tabList[i].data.brushes.length; j++)
+					{
+						this.tabIndex(i).appendBrush(this.tabList[i].data.brushes[j]);
+					}
+
+				}
+			}
+			catch(e)
+			{
+				this.tabList = []
+			}
+
+			if (this.tabList.length == 0) {this.appendTab("default", false)}
+
+		},
+
+		getTabById:function(inID)
+		{
+			for(var i = 0; i < this.tabList.length; i++)
+			{
+				if (this.tabList[i].data.id == inID) {return this.tabList[i];}
+			}
+			return null;
+		},
+
+		getIndexById:function(inID)
+		{
+			for(var i = 0; i < this.tabList.length; i++)
+			{
+				if (this.tabList[i].data.id == inID) {return i;}
+			}
+			return -1;
+		},
+
+		appendTabElement:function(inTab)
+		{
+			var inName = inTab.data.name
+
+		//	Create Tab Button
+			var btn_Edit = document.createElement("input");
+			btn_Edit.type = "text"
+			btn_Edit.value = inName
+			btn_Edit.className = "editTab"
+			btn_Edit.id = "btn_Edit_" + inTab.data.id
+			btn_Edit.disabled = "disabled"
+
+
+			btn_Edit.onkeydown = tabOnKeydown;
+			btn_Edit.onblur = tabOnBlur;
+
+		    $(btn_Edit).attr('size', $(btn_Edit).val().length);
+
+
+			var btn = document.createElement("BUTTON");
+			btn.appendChild(btn_Edit);
+
+			btn.className = "TabButton"
+			btn.draggable = "true"
+			btn.ondrop = function(event){tabOnDrop(event)}
+			btn.ondragstart = function(event){tabDrag(event)}
+			btn.ondragover =  function(event){tabDragOver(event)}
+			btn.ondragend = function(event){tabDragEnd(event)}
+
+			btn.id = "TabButton_"+ inTab.data.id
+			btn.value = inName;
+			btn.setAttribute("data-id", inTab.data.id)
+
+			btn.onclick = function()
+			{
+				if (this.childNodes[0].disabled != "")
+				{
+					NBPanel.tabs.tab(this.dataset.id).setActive()
+				}
+
+			}
+
+			btn.oncontextmenu = function(event){event.stopPropagation(); contextTab(this.dataset.id)}
+
+			btn.ondblclick = tabStartEdit;
+
+			document.getElementById("TopBar").appendChild(btn);
+
+
+		//Create Tab Body
+		    var brushGroup = document.createElement("div");
+			brushGroup.id = inName
+			brushGroup.className = "scroll"
+			document.getElementById("ContainerBar").appendChild(brushGroup)
+
+
+			inTab.brushGroup = brushGroup;
+			inTab.button = btn;
+			return {group:brushGroup,button:btn} 
+
+		},
+
+		writeTabListFile:function()
+		{
+			var tabBuffer = []
+
+			var tabData = {active: this.activeTab, tabs:[]}
+
+
+			for (var i = 0; i < this.tabList.length; i++)
+			{
+				tabData.tabs.push(this.tabList[i].data.id)
+			}	
+
+			fs.writeFileSync(NBPanel.dataPath + "/" +  this.tabListFile, JSON.stringify(tabData))
+		},
+
+		appendTab:function(inName, inStartEdit)
+		{
+			inStartEdit = (inStartEdit == undefined) ? true : inStartEdit;
+
+			var newTab = getEntryInc(NBPanel.tabsPath)
+
+			tabData = {id:newTab ,name:inName, brushes:[]}
+
+			fs.writeFileSync(NBPanel.tabsPath + newTab, JSON.stringify(tabData));
+
+
+			var curTab = {data:tabData, brushes:[]}
+			this.tabList.push(curTab)
+			this.writeTabListFile();
+
+			tabElement = this.appendTabElement(this.tabList[this.tabList.length-1]);
+			this.tab(tabData.id).setActive()
+			
+			if (inStartEdit)
+			{ this.tab(tabData.id).listTab.button.ondblclick();}
+
+			
+
+		},
+
+		tabIndex:function(inIndex)
+		{
+						//alert(inIndex)
+			if (inIndex == null) return null;
+
+			var retTab = 
+			{
+				index: inIndex,
+				id: NBPanel.tabs.tabList[inIndex].data.id,
+				name: NBPanel.tabs.tabList[inIndex].data.name,
+				listTab:NBPanel.tabs.tabList[inIndex],
+				element:"",
+
+				//Adds brush button element to tab element
+				appendBrush:function(inBrushID)
+				{
+					var newButton = NBPanel.brushes.createBrushButton(inBrushID)
+					var brushData = JSON.parse(fs.readFileSync(NBPanel.entriesPath+"/"+inBrushID+"/Entry.json", 'utf8'))				
+					this.listTab.brushes.push({data:brushData, id:inBrushID, button:newButton, update:updateLook})
+
+					this.listTab.brushGroup.appendChild(newButton)
+
+					NBPanel.brushes.updateLook(); // improve by updating only current button.
+				},
+
+				getBrushIDs:function()
+				{
+					var IDList = []
+					for (var i = 0; i < this.listTab.brushes.length; i++)
+					{IDList.push(this.listTab.brushes[i].id)}
+
+					return IDList
+				},
+
+				writeFile:function()
+				{
+					fs.writeFileSync(NBPanel.tabsPath + "/" + this.id, JSON.stringify(this.listTab.data));
+				},
+
+				rename:function(inName)
+				{
+					this.listTab.data.name = inName;
+					NBPanel.tabs.writeTabListFile();
+					this.writeFile()	
+				},
+
+				setActive:function()
+				{
+					document.getElementById("btn_AddFromFile").disabled = ""
+					document.getElementById("btn_AddFromFile").childNodes[1].style.opacity = 0.5
+					document.getElementById("btn_AddTool").disabled = ""
+					document.getElementById("btn_AddTool").childNodes[1].style.opacity = 0.5
+
+					NBPanel.tabs.activeTab = this.index
+					NBPanel.sharedTab.tabButton.className = "TabButton TabShared"	
+
+					for(var i = 0; i < NBPanel.tabs.tabList.length; i++)
+					{
+
+						if (i == NBPanel.tabs.activeTab)
+						{
+
+							NBPanel.tabs.tabList[i].brushGroup.style.display = "block"
+							NBPanel.tabs.tabList[i].button.className = "TabButton_Selected"	
+						}
+						else
+						{
+							NBPanel.tabs.tabList[i].brushGroup.style.display = "none"
+							NBPanel.tabs.tabList[i].button.className = "TabButton"					
+						}
+					}
+
+					NBPanel.tabs.writeTabListFile();
+					this.listTab.button.focus();
+				},
+
+				remove:function()
+				{	
+					var currentObj = this;
+
+					if (this.listTab.brushes.length == 0)
+					{
+						removeCurTab(this);
+						return;
+					}
+
+					var command = "confirm('Warning!\\n You are about to remove this tab\\n and all the brushes inside it!', true, 'Warning: Remove Tab')"
+
+					csInterface.evalScript(command, function(retVal)
+					{
+						if (retVal == "false")
+							return;
+
+						while (currentObj.listTab.brushes.length > 0)
+						{
+							NBPanel.brushes.brush(currentObj.listTab.brushes[0].id).remove();
+						}
+
+						removeCurTab(currentObj);		
+					})
+
+					return;
+
+					function removeCurTab(currentObj)
+					{
+
+						removeElement (currentObj.listTab.brushGroup)
+						removeElement (currentObj.listTab.button)
+
+						try
+						{
+							fs.removeSync(NBPanel.tabsPath + "/" + currentObj.id)	
+						}
+						catch(e){alert(e)}
+						
+						NBPanel.tabs.tabList.splice(currentObj.index, 1)
+						NBPanel.tabs.tabIndex((currentObj.index-1)>-1 ? currentObj.index-1 : 0).setActive()
+						NBPanel.tabs.writeTabListFile()			
+					}
+				},
+
+			}
+
+			return retTab;
+		},
+
+		tabCurrent:function()
+		{
+			if (this.activeTab == "SHARED") return NBPanel.sharedTab
+			return this.tabIndex(this.activeTab)
+		},
+
+		tab:function(inID)
+		{
+
+			if (inID == "SHARED") return NBPanel.sharedTab
+			var curIndex = null;
+
+			for(var i = 0; i < this.tabList.length; i++)
+			{
+				if (this.tabList[i].data.id == inID) {curIndex = i; break;}
+			}
+			
+			return this.tabIndex (curIndex)
+		},
+
+	}
+
+	this.settings =
+	{
+		values:
+		{
+			useColor: false,
+			showText: true,
+			showShortThumb: true,
+			showLongThumb: true,
+			scaleSlider: 64,
+			activeBrushGroup:"",
+			persistent: true,
+			shareLocation:""
+		},
+
+		apply: function()
+		{
+			csInterface.updatePanelMenuItem("Show Brush Thumbnail", true, this.values.showShortThumb);
+			csInterface.updatePanelMenuItem("Show Stroke Thumbnail", true, this.values.showLongThumb);
+			csInterface.updatePanelMenuItem("Show Brush Name", true, this.values.showText);
+			this.setPersistent();
+			NBPanel.brushes.updateLook()
+
+		},
+
+		write: function ()
+		{
+			fs.writeFileSync(NBPanel.dataPath + "settings.json", JSON.stringify(this.values))			
+		},
+
+		read: function()
+		{
+			if (!fs.existsSync(NBPanel.dataPath + "/settings.json")) return;
+			var inValues = JSON.parse(fs.readFileSync(NBPanel.dataPath + "/settings.json",'utf8'));
+
+			this.values.scaleSlider = inValues.scaleSlider;
+			this.values.persistent = inValues.persistent;
+			this.values.shareLocation = inValues.shareLocation;
+
+
+			this.setThumbShort(inValues.showShortThumb)
+			this.setThumbLong(inValues.showLongThumb)
+			this.setTxt(inValues.showText)
+			this.setColor(inValues.useColor)
+
+			this.values.activeBrushGroup = inValues.activeBrushGroup;
+			document.getElementById("sizeSlider").value = this.values.scaleSlider
+		},
+
+		setPersistent: function()
+		{		
+			csInterface.updatePanelMenuItem("Persistent Panel", true, NBPanel.settings.values.persistent);
+			if (this.values.persistent)
+			{
+				event = new CSEvent("com.adobe.PhotoshopPersistent", "APPLICATION");
+			}
+	        else
+			{
+	            event = new CSEvent("com.adobe.PhotoshopUnPersistent", "APPLICATION");
+	        }
+            event.extensionId = csInterface.getExtensionID();
+            csInterface.dispatchEvent(event);
+		},
+
+
+		setThumbLong:function(inVal)
+		{
+			NBPanel.settings.values.showLongThumb = inVal;
+			NBPanel.brushes.updateLook()
+			NBPanel.settings.write()
+
+			document.getElementById("toggleLongThumb").childNodes[1].src = inVal ? 'images/Button_LongThumb.png' : 'images/Button_LongThumb_off.png';
+		},
+
+		setThumbShort:function(inVal)
+		{
+			NBPanel.settings.values.showShortThumb = inVal;
+			NBPanel.brushes.updateLook()
+			NBPanel.settings.write()
+
+			document.getElementById("toggleShortThumb").childNodes[1].src = inVal ? 'images/Button_ShortThumb.png' : 'images/Button_ShortThumb_off.png';
+		},
+
+		setColor:function(inVal)
+		{
+			if (inVal == undefined) inVal = true;
+			NBPanel.settings.values.useColor = inVal;
+			document.getElementById("toggleColor").childNodes[1].src = inVal ? 'images/Button_ColorChange.png' : 'images/Button_ColorChange_off.png';
+			NBPanel.brushes.updateLook()
+
+			NBPanel.settings.write()
+		},
+
+		setTxt:function(inVal)
+		{
+			NBPanel.settings.values.showText = inVal;
+			NBPanel.brushes.updateLook()
+			NBPanel.settings.write()
+
+			document.getElementById("toggleTxt").childNodes[1].src = inVal ? 'images/Button_Txt.png' : 'images/Button_Txt_off.png';
+		},
+
+	}
+
+
+	this.flyoutMenu = 
+	{
+		XML: 
+		'<Menu> \
+			<MenuItem Id="refreshMenuItem" Label="Refresh" Enabled="true" Checked="false"/> \
+            <MenuItem Label="---" /> \
+            <MenuItem Id="persistentMenu" Label="Persistent Panel" Enabled="true" Checked="true"/> \
+            <MenuItem Id="openMenu" Label="Open Folder" Enabled="true" Checked="false"/> \
+            <MenuItem Id="aboutMenu" Label="About" Enabled="true" Checked="false"/> \
+        </Menu>',
+
+        cacheLabel:"",
+
+        handler: function(event)         // Flyout Menu Click Callback
+		{
+		    // the event's "data" attribute is an object, which contains "menuId" and "menuName"
+		    switch (event.data.menuId)
+		    {
+    			case "aboutMenu":	
+					document.getElementById("modalAbout").style.display = "block";
+    				break;
+
+    			case "openMenu":
+					csInterface.evalScript("Folder('"+doubleDashes(NBPanel.dataPath)+"').execute();");
+    				break;
+		    			    	
+				case "persistentMenu":
+    				NBPanel.settings.values.persistent = !NBPanel.settings.values.persistent;
+					NBPanel.settings.setPersistent()
+	    			NBPanel.settings.write()	
+	    			break;			
+
+		        case "refreshMenuItem":
+		            history.go(0);
+		            break;
+
+		        default:
+		    }
+		},
+
+
+        populate: function()
+        {
+        	// Uses the XML string to build the menu
+	    	csInterface.setPanelFlyoutMenu(this.XML);
+	   		// Listen for the Flyout menu clicks
+   			csInterface.addEventListener("com.adobe.csxs.events.flyoutMenuClicked", this.handler);
+        },
+
+	}
+
+	this.initialize = function()
+	{
+		fs.ensureDirSync(this.dataPath)
+		fs.ensureDirSync(this.tabsPath)
+		fs.ensureDirSync(this.entriesPath)
+		fs.ensureDirSync(this.tempPath)
+
+		this.flyoutMenu.populate()
+		this.settings.read()
+		this.settings.apply();
+
+		NBPanel.sharedTab.init();
+		NBPanel.tabs.init();
+		NBPanel.search.init();
+
+
+		NBPanel.brushes.updateLook()
+	}
+
+
+
+
+
+}
+
+////////////////////////////////////////////////////////// Brush Stuff
+
+function contextDefault()
+{
+ 	csInterface.setContextMenuByJSON(JSON.stringify(null), function(res){})
+}
+
+function contextTab(inTabName)
+{
+
+	var contextJSON =
+	{
+		menu:
+		[
+			{
+				id: "menuItemRemove",
+				label: "Remove Tab",
+				enabled: true,
+				checkable: false,
+				checked: false,
+				icon: "./images/x.png"
+			},
+			{
+				id: "menuItemExportTab",
+				label: "Export Tab",
+				enabled: true,
+				checkable: false,
+				checked: false,
+			},
+		]
+	};
+ 
+ 	csInterface.setContextMenuByJSON(JSON.stringify(contextJSON), function(res) {
+ 	switch(res)
+ 	{
+		case "menuItemExportTab":
+			exportTab(inTabName)
+			break;
+ 		case "menuItemRemove":
+			NBPanel.tabs.tab(inTabName).remove()
+ 			break;
+ 	}
+});
+}
+
+function contextSharedTab()
+{
+	var contextJSON =
+	{
+		menu:
+		[
+			{
+				id: "menuSetPath",
+				label: "Set share location",
+				enabled: true,
+				checkable: false,
+				checked: false,
+			},
+			{
+				id: "menuOpenPath",
+				label: "Open share folder",
+				enabled: true,
+				checkable: false,
+				checked: false,
+			},
+		]
+	};
+ 
+ 	csInterface.setContextMenuByJSON(JSON.stringify(contextJSON), function(res) {
+ 	switch(res)
+ 	{
+		case "menuSetPath":
+			setShareLocation();
+			break;
+		case "menuOpenPath":
+			csInterface.evalScript("Folder('"+NBPanel.settings.values.shareLocation+"').execute();");
+			break;
+ 	}
+});
+}
+
+function contextBrush(inBrushName)
+{
+	var tabsContext = []
+	var tabs = NBPanel.tabs.tabList
+
+	for (var i = 0; i < tabs.length; i++)
+	{
+		tabsContext.push ({id:"TAB_" + tabs[i].data.id, label:tabs[i].data.name})
+	}
+
+	var curBrush = NBPanel.brushes.brush(inBrushName)
+
+	var contextJSON =
+	{
+		menu:
+		[
+			{
+				id: "menuItemRemove",
+				label: "Remove Brush",
+				enabled: true,
+				checkable: false,
+				checked: false,
+				icon: "./images/x.png"
+			}, 
+
+			{
+				id: "menuItemExport",
+				label: "Export Brush",
+				enabled: true,
+				checkable: false,
+				checked: false,
+			}, 
+
+			{
+				id: "menuMoveToTab",
+				label: "Move To",
+				menu:tabsContext
+	
+			},
+
+			{
+				id: "menuCopyToShared",
+				label: "Copy to Shared",
+				enabled: true,
+				checkable: false,
+				checked: false,
+			}, 
+
+		]
+	};
+
+ 	csInterface.setContextMenuByJSON(JSON.stringify(contextJSON), function(res) {
+ 	switch(res)
+ 	{
+ 		case "menuItemRemove":
+			curBrush.remove();
+ 			break;
+
+		case "menuItemExport":
+			exportBrush(inBrushName)
+			break;
+
+		case "menuCopyToShared":
+			NBPanel.brushes.brush(inBrushName).copyToShared()
+
+		default:
+			if (res.substring(0,4) == "TAB_")
+			{
+				NBPanel.brushes.brush(inBrushName).moveToTab(res.substring(4))
+			}
+
+			break;
+ 	}
+});
+}
+
+
+function contextSharedBrush(inBrushName)
+{
+	var tabsContext = []
+	var tabs = NBPanel.tabs.tabList
+
+	for (var i = 0; i < tabs.length; i++)
+	{
+		tabsContext.push ({id:"TAB_" + tabs[i].data.id, label:tabs[i].data.name})
+	}
+
+	var curBrush = NBPanel.brushes.brush(inBrushName)
+
+	var contextJSON =
+	{
+		menu:
+		[
+			{
+				id: "menuItemRemove",
+				label: "Remove Brush",
+				enabled: true,
+				checkable: false,
+				checked: false,
+				icon: "./images/x.png"
+			}, 
+			{
+				id: "menuCopyToTab",
+				label: "Copy To",
+				menu:tabsContext
+	
+			},
+		]
+	};
+
+ 	csInterface.setContextMenuByJSON(JSON.stringify(contextJSON), function(res) {
+ 	switch(res)
+ 	{
+ 		case "menuItemRemove":
+			var command = "confirm('Warning!\\n You are about to remove this brush.\\n this will remove it for everyone using to this share', true, 'Warning: Remove Shared Brush')"
+			csInterface.evalScript(command, function(retVal)
+			{
+				if (retVal == "false") return;
+				NBPanel.sharedTab.brush(inBrushName).removeBrush()
+			})
+ 			break;
+
+		case "menuItemTestBrush":
+			alert(inBrushName)
+			break;
+
+		default:
+			if (res.substring(0,4) == "TAB_")
+			{
+				NBPanel.sharedTab.brush(inBrushName).copyToTab(res.substring(4))
+			}
+
+			break;
+ 	}
+});
+}
+
+function onDrop(event)
+{
+	event.dataTransfer.items[0].getAsString(function(s)
+	{
+		data = JSON.parse(s);
+
+		if (data.assetList[0].type == "brush")
+		{
+			openModal("Processing...")
+			brushID = data.assetList[0].data[0]
+			brushName = data.assetList[0].name
+
+			var command = "createEntryFromExisting('" + NBPanel.entriesPath + "' , '"+  brushID +"','" +  brushName +"')"
+
+			runJSX(command, function(retVal)
+			{
+				NBPanel.tabs.tabCurrent().listTab.data.brushes.push(retVal)
+				NBPanel.tabs.tabCurrent().writeFile()
+				NBPanel.tabs.tabCurrent().appendBrush(retVal)
+				closeModal();
+			})
+		}
+	})
+}
+
+function tabOnKeydown(event)
+{
+	switch(event.keyCode)
+	{
+		case 13: //Enter
+			NBPanel.tabs.tab(this.parentElement.dataset.id).rename(this.value)
+			this.disabled = "disabled"
+			this.dataset.oldvalue = this.value
+			break;
+
+		case 27: //Esc
+			this.disabled = "disabled"
+			this.value = this.dataset.oldvalue
+			break;
+	}
+		$(this).attr('size', $(this).val().length);
+}
+
+function tabOnBlur()
+{
+	this.disabled = "disabled"
+	this.value = this.dataset.oldvalue
+    $(this).attr('size', $(this).val().length);	
+}
+
+function brushDragOver(event)
+{
+	var curElement = document.getElementById(event.dataTransfer.getData("text/plain"))
+	var target = event.target.parentElement
+
+	while(true)
+	{
+		if (target.parentElement == null) return;
+		if (target == curElement) return;
+		if (target.id.substring(0,4) == "brs_")
+		{
+			var movingBrush = NBPanel.brushes.brush(curElement.id.substring(4))
+			var staticBrush = NBPanel.brushes.brush(target.id.substring(4))
+			arrangeBrush(movingBrush,staticBrush)
+		}
+
+		if (target.id.substring(0,11) == "Shared_brs_")
+		{
+
+			var movingBrush = NBPanel.sharedTab.brush(curElement.id.substring(11))
+			var staticBrush = NBPanel.sharedTab.brush(target.id.substring(11))
+			arrangeSharedBrush(movingBrush,staticBrush)
+		}		
+
+		target = target.parentElement;
+	}
+}
+
+function arrangeSharedBrush (movingBrush, staticBrush)
+{
+	if (staticBrush.brushIndex < movingBrush.brushIndex )
+	{staticBrush.element.insertAdjacentElement("beforebegin", movingBrush.element)}
+	else
+	{staticBrush.element.insertAdjacentElement("afterend", movingBrush.element)	}
+
+	//Move brush entries	
+	var curTab = NBPanel.sharedTab.brushList
+	curTab.splice(movingBrush.brushIndex, 1)
+	curTab.splice(staticBrush.brushIndex, 0, movingBrush.tabEntry)	
+
+	//Move brush IDs in tab's list 
+	var curBrush = curTab[movingBrush.brushIndex]	
+	curTab.data.brushes.splice(movingBrush.brushIndex, 1)
+	curTab.data.brushes.splice(staticBrush.brushIndex, 0, curBrush)
+}
+
+
+function arrangeBrush (movingBrush, staticBrush)
+{
+
+	if (staticBrush.brushIndex < movingBrush.brushIndex )
+	{staticBrush.element.insertAdjacentElement("beforebegin", movingBrush.element)}
+	else
+	{staticBrush.element.insertAdjacentElement("afterend", movingBrush.element)	}
+
+	//Move brush entries	
+	var curTab = NBPanel.tabs.tabList[staticBrush.tabIndex]
+	curTab.brushes.splice(movingBrush.brushIndex, 1)
+	curTab.brushes.splice(staticBrush.brushIndex, 0, movingBrush.tabEntry)	
+
+	//Move brush IDs in tab's list 
+	var curBrush = curTab.data.brushes[movingBrush.brushIndex]	
+	curTab.data.brushes.splice(movingBrush.brushIndex, 1)
+	curTab.data.brushes.splice(staticBrush.brushIndex, 0, curBrush)
+}
+
+function brushDragEnd(ev) 
+{
+	NBPanel.tabs.tabCurrent().writeFile()
+    ev.target.childNodes[0].className = "BrushButton"
+    ev.target.childNodes[0].focus()
+}
+
+function brushSharedDragEnd(ev) 
+{
+	NBPanel.sharedTab.saveFile()
+    ev.target.childNodes[0].className = "BrushButton"
+    ev.target.childNodes[0].focus()
+}
+
+function brushDrag(ev) 
+{
+	ev.target.childNodes[0].onclick()
+    ev.dataTransfer.setData("text", ev.target.id);
+	ev.target.childNodes[0].className = "BrushButton_Selected"
+    var dragImage = document.createElement("img")
+    ev.dataTransfer.setDragImage(dragImage, 0, 0)
+}
+
+function tabDragOver(event)
+{
+	var source = document.getElementById(event.dataTransfer.getData("text/plain"))
+	var target = event.target
+
+	while(true)
+	{
+			if (target == source ) return;
+			if (target == null) return;
+			if (target.id.substring(0,10) == "TabButton_") break;
+			target = target.parentElement;
+	}
+
+	if (source.id.substring(0,10) == "TabButton_")	{arrangeTab(source,target); return;}
+
+}
+
+function tabSharedOnDrop(event)
+{
+	var source = document.getElementById(event.dataTransfer.getData("text/plain"))
+	var target = event.target
+
+	if (source.id.substring(0,4) == "brs_")
+	{
+		NBPanel.brushes.brush(source.id.substring(4)).copyToShared()
+	}
+}
+
+function tabOnDrop(event)
+{
+	var source = document.getElementById(event.dataTransfer.getData("text/plain"))
+	var target = event.target
+	
+	while(true)
+	{
+			if (source == target) return;
+			if (target == null) return;
+			if (target.id.substring(0,10) == "TabButton_") break;
+			target = target.parentElement;
+	}
+
+	if (source.id.substring(0,4) == "brs_" && target.id.substring(0,10) == "TabButton_")
+	{
+
+		NBPanel.brushes.brush(source.id.substring(4)).moveToTab(target.dataset.id)	
+		return;
+	}
+	if (source.id.substring(0,11) == "Shared_brs_")
+	{
+
+		openModal("Processing...")
+
+		NBPanel.sharedTab.brush(source.id.substring(11)).copyToTab(target.dataset.id)
+		setTimeout(function()
+		{
+			closeModal();
+		}, 250); 
+	}	
+
+}
+
+function arrangeTab (movingTab, staticTab)
+{
+	var movingIndex = NBPanel.tabs.getIndexById(movingTab.dataset.id)
+	var staticIndex = NBPanel.tabs.getIndexById(staticTab.dataset.id)
+
+	if (staticIndex < movingIndex )
+	{staticTab.insertAdjacentElement("beforebegin", movingTab)}
+	else
+	{staticTab.insertAdjacentElement("afterend", movingTab)	}
+
+	var curTab = NBPanel.tabs.tabList[movingIndex]
+	NBPanel.tabs.tabList.splice(movingIndex,1) 
+	NBPanel.tabs.tabList.splice(staticIndex,0,curTab)
+}
+
+function tabDragEnd(event)
+{
+	NBPanel.tabs.writeTabListFile();
+}
+
+
+function tabDrag(ev) 
+{
+	document.getElementById(ev.target.id).onclick()
+    ev.dataTransfer.setData("text", ev.target.id);
+    var dragImage = document.createElement("img")
+   
+	ev.target.style.cursor = 'grabbing'
+	// dragImage.src = ""
+	ev.dataTransfer.setDragImage(dragImage, 0, 0)
+}
+
+function allowDrop(ev)
+{
+	ev.preventDefault();
+}
+
+function sliderChange()
+{
+	NBPanel.settings.values.scaleSlider = document.getElementById("sizeSlider").value;
+	NBPanel.settings.write()
+}
+
+function removeElement(inElement)
+{
+	inElement.parentElement.removeChild(inElement)
+}
+
+
+
+function updateLook(inSlider)
+{
+	var curValue = inSlider
+
+	var scale = curValue/64;
+	var ShortThumb = {width:64, height:64};
+	var LongThumb = {width:256, height:64};
+	var Margin = {width:2, height:64}
+
+	var showLong = NBPanel.settings.values.showLongThumb
+	var showShort = NBPanel.settings.values.showShortThumb
+	var showText = NBPanel.settings.values.showText
+
+
+	this.button.childNodes[1].style.width = scale * (showShort * ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
+	this.button.childNodes[0].style.height = scale * ShortThumb.height + "px";
+	this.button.childNodes[0].style.width = scale * (showShort*ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
+
+	this.button.childNodes[0].style.backgroundSize = scale *showShort*ShortThumb.width + "px "+ scale * showShort *ShortThumb.height+"px," + showLong*LongThumb.width * scale + "px, " + showLong*LongThumb.height + "px";
+	this.button.childNodes[1].style.display = showText ? "block" : "none"	
+
+	this.button.childNodes[1].childNodes[1].style.width = this.button.childNodes[1].clientWidth - 40 + "px"//yy
+
+
+	//set colors
+	var brushData = this.data
+
+	var BG = this.button.childNodes[1].childNodes[0].childNodes[1].style
+	var FG = this.button.childNodes[1].childNodes[0].childNodes[0].style
+
+	if (brushData.colorBG == undefined)
+	brushData.colorBG = {red:48, green:48, blue:48}
+
+	if (brushData.colorFG == undefined)
+	brushData.colorFG = {red:48, green:48, blue:48}
+
+	var colorBG = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"
+	var colorFG = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"
+
+	BG.backgroundColor = NBPanel.settings.values.useColor ? colorBG : "#303030";
+	FG.backgroundColor = NBPanel.settings.values.useColor ? colorFG : "#303030";					
+}
+
+
+/////////////////////////////////////////////////////////////////////////////GENERAL
+
+function doubleDashes(inPath)
+{
+	return inPath.replace(/\\/g,"\\\\")
+}
+
+function padZeroes(num, size)
+{
+	var s = num+"";
+	while (s.length < size) s = "0" + s;
+	return s;
+}
+
+function setEntryPath(inPath,inColorFG,inColorBG)
+{
+	if (!NBPanel.settings.values.useColor)
+	{
+		inColorFG = undefined;
+		inColorBG = undefined;
+	}
+	csInterface.evalScript("setEntryPath('" + inPath +"','" + inColorFG + "','" + inColorBG + "');");	
+}
+
+function setBrush(inName)
+{
+	csInterface.evalScript("setToolPreset('" + inName + "');");
+}
+
+
+
+function tabStartEdit()
+{
+	this.childNodes[0].disabled = ""
+	this.childNodes[0].setAttribute("data-oldvalue", this.childNodes[0].value)
+	this.childNodes[0].focus()
+	this.childNodes[0].select()
+}
+
+
+var modal = document.getElementById('myModal');
+
+function openModal(inText)
+{
+ 	document.getElementById("modalText").innerHTML  = inText
+	modal.style.display = "block";
+}
+
+function closeModal()
+{
+	modal.style.display = "none";
+}
+
+
+
+
+function getEntryInc(inPath)
+{
+	var fileList = fs.readdirSync(inPath).sort()
+
+	var newTab;
+
+	if (fileList.length == 0)
+	{
+		newTab = padZeroes(0,8)
+	}
+	else
+	{
+		newTab = padZeroes (parseInt(fileList[fileList.length-1]) + 1 , 8)  
+	}
+
+	return newTab;
+}
+
+
+
+
+
+
+
+
+
+
+</script>

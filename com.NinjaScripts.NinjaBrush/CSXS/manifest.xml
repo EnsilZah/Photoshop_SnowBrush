@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ExtensionManifest Version="6.0" ExtensionBundleId="com.NinjaScripts.NinjaBrush" ExtensionBundleVersion="0.0.1"
+		ExtensionBundleName="Snowball" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Author>
+		<![CDATA[Tammuz Kay]]>
+	</Author>	<ExtensionList>
+		<Extension Id="com.NinjaScripts.NinjaBrush.panel" Version="0.0.1" />
+		<Extension Id="com.NinjaScripts.NinjaBrush.popup" Version="0.0.0" />
+	</ExtensionList>
+	<ExecutionEnvironment>
+		<HostList>
+			<Host Name="PHSP" Version="15.0" />
+			<Host Name="PHXS" Version="15.0" />
+		</HostList>
+		<LocaleList>
+			<Locale Code="All" />
+		</LocaleList>
+		<RequiredRuntimeList>
+			<RequiredRuntime Name="CSXS" Version="4.0" />
+
+		</RequiredRuntimeList>
+	</ExecutionEnvironment>
+	<DispatchInfoList>
+		<Extension Id="com.NinjaScripts.NinjaBrush.panel">
+			<DispatchInfo >
+				<Resources>
+					<CEFCommandLine>
+							<Parameter>--enable-nodejs</Parameter>
+							<Parameter>--mixed-context</Parameter>
+					</CEFCommandLine>
+
+					<MainPath>./index.html</MainPath>
+				</Resources>
+				<Lifecycle>
+					<AutoVisible>true</AutoVisible>
+				</Lifecycle>
+				<UI>
+					<Type>Panel</Type>
+					<Menu>SnowBrush</Menu>
+					<Geometry>
+						<Size>
+							<Height>400</Height>
+							<Width>400</Width>
+						</Size>
+					</Geometry>
+					<Icons>
+						<Icon Type="Normal">./images/Logo2.png</Icon>
+					</Icons>
+				</UI>
+			</DispatchInfo>
+		</Extension>
+
+		<Extension Id="com.NinjaScripts.NinjaBrush.popup">
+			<DispatchInfo >
+				<Resources>
+					<CEFCommandLine>
+							<Parameter>--enable-nodejs</Parameter>
+					</CEFCommandLine>
+
+				<MainPath>./Popup.html</MainPath>
+				<ScriptPath>./jsx/ArtPipeline.jsx</ScriptPath>
+				</Resources>
+				<Lifecycle>
+					<AutoVisible>true</AutoVisible>
+				</Lifecycle>
+				<UI>
+					<Type>Panel</Type>
+					<Geometry>
+						<Size>
+							<Height>1</Height>
+							<Width>1</Width>
+						</Size>
+						<MaxSize>
+							<Height>1080</Height>
+							<Width>1920</Width>
+						</MaxSize>
+						<MinSize>
+							<Height>0</Height>
+							<Width>0</Width>
+						</MinSize>
+					</Geometry>
+				</UI>
+			</DispatchInfo>
+		</Extension>
+
+	</DispatchInfoList>
+</ExtensionManifest>
