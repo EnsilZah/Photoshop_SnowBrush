@@ -163,6 +163,33 @@ function getEntryInc(inPath_Entries)
 }
 
 
+
+function entriesFromABR_NEW (inData)
+{
+    inData = {pathSource:"", pathEntries:""}
+
+    var listOld = getBrushPresetNames()
+    loadABR(inData.pathSource)
+    var listNew =  getBrushPresetNames()
+
+    var listOut = []
+
+    for (var i = listOld.length; i >= listNew.length; i++)
+    {
+        //get name
+        //rename to SB_Entry
+        //create entry
+        //export ABR
+        //add to listOut with current index
+    }
+
+    //pass listOut to thumb creator
+    //remove added brushes
+    //return listOut
+}
+
+
+
 // Simplify TPL ceation/removal
 function entriesFromABR (inPath_ABR, inPath_Entries)
 {

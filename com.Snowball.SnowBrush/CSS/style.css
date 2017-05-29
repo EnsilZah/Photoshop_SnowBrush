@@ -460,7 +460,7 @@ div.textLabel
 
 button.toolButton
 {
-    background-color: #525252;
+    background-color: rgba(0,0,0,0);
     border-radius: 4px;
     width:26px;
     height:22px;
@@ -473,7 +473,7 @@ button.toolButton
 
     color: #aaaaaa;
     font-weight: lighter;
-
+    font-size: 10px;
 
 
 }
@@ -516,7 +516,7 @@ button.recentBrushButton:hover
 
 input.textStrip
 {
-    padding:0 0 0 4px;
+    text-indent: 5px;
     background-color:#6c6c6c;
     border-radius: 8px;
     height:16px; 
@@ -614,7 +614,16 @@ fieldset.mainGroup
 {
   position: absolute;
   right: 0;
-  bottom: 4px;
+  bottom: 0px;
   left: 0;
 }
 
+.inputBar
+{
+    height:24px;
+    overflow:hidden;
+    background-color:#535353;
+    padding:0;
+    margin:0;
+    align:left;
+}

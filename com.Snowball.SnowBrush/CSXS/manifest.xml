@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<ExtensionManifest Version="6.0" ExtensionBundleId="com.NinjaScripts.NinjaBrush" ExtensionBundleVersion="0.0.1"
+<ExtensionManifest Version="6.0" ExtensionBundleId="com.Snowball.SnowBrush" ExtensionBundleVersion="0.6.0"
 		ExtensionBundleName="Snowball" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<Author>
 		<![CDATA[Tammuz Kay]]>
 	</Author>	<ExtensionList>
-		<Extension Id="com.NinjaScripts.NinjaBrush.panel" Version="0.0.1" />
-		<Extension Id="com.NinjaScripts.NinjaBrush.popup" Version="0.0.0" />
+		<Extension Id="com.Snowball.SnowBrush.panel" Version="0.6.0" />
 	</ExtensionList>
 	<ExecutionEnvironment>
 		<HostList>
@@ -22,7 +21,7 @@
 		</RequiredRuntimeList>
 	</ExecutionEnvironment>
 	<DispatchInfoList>
-		<Extension Id="com.NinjaScripts.NinjaBrush.panel">
+		<Extension Id="com.Snowball.SnowBrush.panel">
 			<DispatchInfo >
 				<Resources>
 					<CEFCommandLine>
@@ -45,44 +44,10 @@
 						</Size>
 					</Geometry>
 					<Icons>
-						<Icon Type="Normal">./images/Logo2.png</Icon>
+						<Icon Type="Normal">./images/Logo/Logo.png</Icon>
 					</Icons>
 				</UI>
 			</DispatchInfo>
 		</Extension>
-
-		<Extension Id="com.NinjaScripts.NinjaBrush.popup">
-			<DispatchInfo >
-				<Resources>
-					<CEFCommandLine>
-							<Parameter>--enable-nodejs</Parameter>
-					</CEFCommandLine>
-
-				<MainPath>./Popup.html</MainPath>
-				<ScriptPath>./jsx/ArtPipeline.jsx</ScriptPath>
-				</Resources>
-				<Lifecycle>
-					<AutoVisible>true</AutoVisible>
-				</Lifecycle>
-				<UI>
-					<Type>Panel</Type>
-					<Geometry>
-						<Size>
-							<Height>1</Height>
-							<Width>1</Width>
-						</Size>
-						<MaxSize>
-							<Height>1080</Height>
-							<Width>1920</Width>
-						</MaxSize>
-						<MinSize>
-							<Height>0</Height>
-							<Width>0</Width>
-						</MinSize>
-					</Geometry>
-				</UI>
-			</DispatchInfo>
-		</Extension>
-
 	</DispatchInfoList>
 </ExtensionManifest>

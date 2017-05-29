@@ -1,6 +1,6 @@
 <!doctype html>
 
-<script src="./js/Theme.js"></script>
+<script src="./js/JSX.js"></script>
 <script src="./lib/CSInterface.js"></script>
 <script src="./jQueryAssets/jquery-1.8.3.min.js"></script>
 
@@ -41,7 +41,7 @@
 
 	<div id="modalAbout" class="modal" onclick="document.getElementById('modalAbout').style.display = 'none';">
 		<div class="modal-content" style="width:200px">
-    		<p id="modalText">SnowBrush v0.5</p>
+    		<p id="modalText">SnowBrush v0.6</p>
     		<p id="modalText2" style="font-size:10px">Created by Tammuz Kay at Snowball Studios</p>
 	    	<img src='images/SnowballLogo.png' alt='' align='center' style="height:100%; width:100%">
 		</div>
@@ -51,29 +51,24 @@
 	<div style="padding:0;margin:0">
 
 
-		<div id="ToolBar" oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+		<div id="ToolBar" class="inputBar" oncontextmenu="contextDefault()" align="left" style="height:inherit;"  >
 
 			<button class="toolButton" onclick="NBPanel.tool.brush.set()">			<img src='images/ToolBrush.png'  alt='' align='center' style='margin:0'>			</button>
 			<button class="toolButton">			<img src='images/ToolPencil.png' onclick="NBPanel.tool.pencil.set()" alt='' align='center' style='margin:0'>			</button>
-			<button class="toolButton">			<img src='images/ToolMixBrush.png' onclick="NBPanel.tool.mixbrush.set()" alt='' align='center' style='margin:0'>			</button>
-
-			<button class="toolButton">			<img src='images/ToolErase.png' onclick="NBPanel.tool.erase.set()" alt='' align='center' style='margin:0'>			</button>
-
+			<button class="toolButton">			<img src='images/ToolMixBrush.png' onclick="NBPanel.tool.mixbrush.set()" alt='' align='center' style='margin:0'>		</button>
+			<button class="toolButton">			<img src='images/ToolErase.png' onclick="NBPanel.tool.erase.set()" alt='' align='center' style='margin:0'>				</button>
 			<button class="toolButton">			<img src='images/ToolSharpen.png' onclick="NBPanel.tool.sharpen.set()" alt='' align='center' style='margin:0'>			</button>
-			<button class="toolButton">			<img src='images/ToolBlur.png' onclick="NBPanel.tool.blur.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolBlur.png' onclick="NBPanel.tool.blur.set()" alt='' align='center' style='margin:0'>				</button>
 			<button class="toolButton">			<img src='images/ToolSmudge.png' onclick="NBPanel.tool.smudge.set()" alt='' align='center' style='margin:0'>			</button>
-
-			<button class="toolButton">			<img src='images/ToolDodge.png'onclick="NBPanel.tool.dodge.set()" alt='' align='center' style='margin:0'>			</button>
-			<button class="toolButton">			<img src='images/ToolBurn.png'onclick="NBPanel.tool.burn.set()" alt='' align='center' style='margin:0'>			</button>
-			<button class="toolButton">			<img src='images/ToolSponge.png'onclick="NBPanel.tool.sponge.set()" alt='' align='center' style='margin:0'>			</button>
-
-			<button class="toolButton">			<img src='images/toolStamp.png'onclick="NBPanel.tool.stamp.set()" alt='' align='center' style='margin:0'>			</button>
+			<button class="toolButton">			<img src='images/ToolDodge.png'onclick="NBPanel.tool.dodge.set()" alt='' align='center' style='margin:0'>				</button>
+			<button class="toolButton">			<img src='images/ToolBurn.png'onclick="NBPanel.tool.burn.set()" alt='' align='center' style='margin:0'>					</button>
+			<button class="toolButton">			<img src='images/ToolSponge.png'onclick="NBPanel.tool.sponge.set()" alt='' align='center' style='margin:0'>				</button>
+			<button class="toolButton">			<img src='images/toolStamp.png'onclick="NBPanel.tool.stamp.set()" alt='' align='center' style='margin:0'>				</button>
 	
 
 
 		</div>
-
-		<div id="RecentBar"  oncontextmenu="contextDefault()" align = "left" style="height:24px;max-height:24px;overflow:hidden; background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+			<div id="RecentBar" class="inputBar"  oncontextmenu="contextDefault()" align = "left"  >
 		</div>
 
 
@@ -85,21 +80,24 @@
 		</table>
 
 
-		<div id="SearchBar" oncontextmenu="contextDefault()" align = "left" style="height:30px;overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+		<div id="SearchBar" class="inputBar" oncontextmenu="contextDefault()" align = "left" style="" >
 
 			<table width="100%" style="position: relative;top:-2px">
-				<td align='left' style='white-space: nowrap;'>
+
+			<td  align='left' >
 				<img src='images/search.png' alt='' align='center' style="padding:0 1px 0 3px" >
-				<input id="searchText" type="text" align='center' onkeyup="NBPanel.search.update();" class="textStrip" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%">
+			</td>
+
+				<td width="100%">
+					<input id="searchText" type="text" align='center' onkeydown="keydownSelectAll(event)" onkeyup="NBPanel.search.update(event);" class="textStrip" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:inherit;">
 
 				</td>
 
 
 
-
 				<td align='right' style='white-space: nowrap;'>		
-					<button class="toolButton" align="right" onclick="NBPanel.search.clear()" style="width:50px;height:16px;position: relative; top:1px">Clear</button>
-					<button class="toolButton" align="right" onclick="" style="width:35px;height:16px;position: relative; top:1px">All</button>		
+					<button class="toolButton" align="right" onclick="NBPanel.search.clear()" style="border-radius:6px;  width:18px;height:18px;position: relative; top:0px">X</button>
+					<button class="toolButton" id="searchToggleAll" align="right" onclick="NBPanel.search.setAll(!NBPanel.search.searchAll)" style="width:35px;height:18px;position: relative; top:0px">All</button>		
 				</td>
 			</table>
 
@@ -108,63 +106,66 @@
 		</div>
 
 
-		<div id="TopBar" oncontextmenu="contextDefault()" align = "left" style="overflow:visible ;background-color:#424242;background-image:URL(./images/tabdivider.png);padding:0;margin:0;align:left;" >
+		<div id="TopBar" class="inputBar" oncontextmenu="contextDefault()" align="left" style="position:relative;bottom:-1px; height:inherit;overflow:visible;background-image:URL(./images/elements/tabdivider.png);">
 			<button id='btn_AddEntry' style="border-color:#303030" onclick="NBPanel.tabs.appendTab('Untitled');" class="TabButton" >+</button>	
-			<button id='btn_Shared' oncontextmenu="event.stopPropagation(); contextSharedTab()" class="TabButton TabShared" style="border-color:#303030"  >Shared </button>	
+			<button id='btn_Shared' oncontextmenu="event.stopPropagation(); contextSharedTab()" class="TabButton TabShared" style="border-color:#303030;position:relative;top:-2px;"  >Shared </button>	
 		</div>
 
 		<div id="ContainerBar" oncontextmenu="contextDefault()" align = "left" style="position:fixed;width:100%;height:calc(100%);overflow:visible;background-color:#444444;px;margin:0;align:left">
 		</div>
 
 
-		<div id="bottomBar" class="bottomBar" align="left" oncontextmenu="contextDefault()" >
-	
-			 <input class="slider" type="range" id="sizeSlider" value="64" min ="16" max = "64" style = "width:128px;" oninput = "NBPanel.brushes.updateLook()" onchange = "sliderChange()">
+		<div id="bottomBar" class="footer" oncontextmenu="contextDefault()" >
+			<div class = "inputBar noedge" style="height:17px">
+				<table width="100%" class="noedge" style="position: relative;overflow:hidden;">
+					
+					<td align='left' style="width:1%; white-space:nowrap;" >
+						<button onclick ="modalSettings.open()"  class="toolButton " style="position:relative; top:-5px;height:15px;">
+						<img src='images/buttons/settings.png' alt=''  style="opacity:.5"/>
+						</button>
+
+						<button id='btn_AddTool' onclick="AddCurrentTool()" class="toolButton" title="Add current" style="position:relative; margin-left:5px; top:-5px; height:15px; " >
+							<img src='images/buttons/AddBrush.png' alt='' style="opacity:.5"/>
+						</button>
+
+						<button id='btn_AddFromFile' onclick="AddFromFile()" class="toolButton" title="Import File" style="position:relative; top:-5px; height:15px;" >
+							<img src='images/buttons/AddFile.png' alt=''  style="opacity:.5"/>
+						</button>
+					</td>
+
+					<td >
+						 <input class="slider" type="range" id="sizeSlider" value="64" min ="16" max = "64" style ="width:100%; position:relative;top:-4px" oninput = "NBPanel.brushes.updateLook()" onchange="sliderChange()">
+					</td >
 
 
+					<td align='right'  style="width:1%; white-space:nowrap;">		
+						<button id='toggleShortThumb' onclick="NBPanel.settings.setThumbShort(!NBPanel.settings.values.showShortThumb)" class="toolButton" title="Show short thumbnail" style="position:relative;top:-8px;height:15px;" >
+							<img src='images/Buttons/Button_ShortThumb.png' alt='' style="opacity:0.8;vertical-align:middle;"/>
+						</button>
 
 
-		&nbsp;
-			<button id='toggleShortThumb' onclick="NBPanel.settings.setThumbShort(!NBPanel.settings.values.showShortThumb)" class="TabButton" title="Show short thumbnail" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
-				<img src='images/Button_ShortThumb.png' alt='' align='left' style="opacity:0.8"/>
-			</button>
+						<button id='toggleLongThumb' onclick="NBPanel.settings.setThumbLong(!NBPanel.settings.values.showLongThumb)" class="toolButton" title="Show long thumbnail" style=" position:relative; top:-8px;height:15px;" >
+							<img src='images/buttons/Button_LongThumb.png' alt='' style="opacity:0.8;vertical-align:middle;"/>
+						</button>
 
- 		&nbsp;
+						<button id='toggleTxt' onclick="NBPanel.settings.setTxt(!NBPanel.settings.values.showText)" class="toolButton" title="Show brush name" style="position:relative;top:-8px; height:15px;" >
+							<img src='images/buttons/Button_TXT.png' alt='' style="opacity:0.8;vertical-align:middle;"/>
+						</button>
 
-			<button id='toggleLongThumb' onclick="NBPanel.settings.setThumbLong(!NBPanel.settings.values.showLongThumb)" class="TabButton" title="Show long thumbnail" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
-				<img src='images/Button_LongThumb.png' alt='' align='left' style="opacity:0.8"/>
-			</button>
+						<button id='toggleColor' onclick="NBPanel.settings.setColor(!NBPanel.settings.values.useColor)" class="toolButton" title="Use color" style="position:relative; margin:0px; top:-8px; height:15px;" >
+							<img src='images/buttons/Button_ColorChange.png' alt='' style="opacity:0.8; vertical-align:middle;"/>
+						</button>
+					</td>
 
-			<button id='toggleTxt' onclick="NBPanel.settings.setTxt(!NBPanel.settings.values.showText)" class="TabButton" title="Show brush name" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
-				<img src='images/Button_TXT.png' alt='' align='left' style="opacity:0.8"/>
-			</button>
+					<td style="width:10px">
+						
+					</td>
 
-			<button id='toggleColor' onclick="NBPanel.settings.setColor(!NBPanel.settings.values.useColor)" class="TabButton" title="Use color" style="background-color:rgba(0,0,0,0);border-style:none; padding:0px; position:relative; margin:0px; top:-5px; border-radius:0; height:16px; overflow:hidden; " >
-				<img src='images/Button_ColorChange.png' alt='' align='left' style="opacity:0.8"/>
-			</button>
-
-
-	 		&nbsp;
-
-			<button id='btn_AddTool' onclick="AddCurrentTool()" class="TabButton" title="Add current" style="position:relative; margin-left:5px; top:-7px; border-radius:0; height:15px; overflow:hidden; " >
-				<img src='images/AddBrush03.png' alt='' align='left' style="opacity:.5"/>
-			</button>
-
-			<button id='btn_AddFromFile' onclick="AddFromFile()" class="TabButton" title="Import File" style="position:relative; top:-7px; border-radius:0; height:15px; overflow:hidden; " >
-				<img src='images/AddFile03.png' alt='' align='left' style="opacity:.5"/>
-			</button>
-
-
-			<button onclick = "modalSettings.open()"  class="TabButton" style="position:relative; top:-7px; border-radius:0; height:15px; overflow:hidden;">
-			<img src='images/settings.png' alt='' align='left' style="opacity:.5"/>
-			</button>
-<!--
-			<button id='btn_Export' align='right' onclick="exportAll();" class="TabButton" title="Export File" style="position:relative;top:-7px; border-radius:0; width:22px; height:15px; overflow:hidden; " >
-				<img src='images/export.png' alt='' align='left' style="opacity:.5"/>
-			</button>
--->
-
+				</table>
+			</div>
 		</div>
+
+
 	</div>
 
 
@@ -202,7 +203,6 @@ function onDocResize()
 		heightOffest += containerBar.parentElement.children[i].offsetHeight
 	}
 
-
 	//var bottomOffest = 0;
 
 	//Make sure ContainerBar fills the same area as tab bar pushes it down.
@@ -213,6 +213,8 @@ function onDocResize()
 
 window.addEventListener("dragover",function(e){e = e || event; e.preventDefault();},false);
 window.addEventListener("drop",function(e){e = e || event; e.preventDefault();},false);
+
+
 
 var NBPanel = null;
 
@@ -606,8 +608,12 @@ function SnowBrushPanel()
 
 	this.search=
 	{
+		searchAll:true,
 		brushGroup:null,
 		textElement:document.getElementById("searchText"),
+		searchAllElement:document.getElementById("searchToggleAll"),
+
+		//zzz
 
 		clear:function()
 		{
@@ -615,9 +621,18 @@ function SnowBrushPanel()
 			this.update();
 		},
 
-		update:function()
+
+		setAll:function(inVar)
 		{
-			
+
+			this.searchAll = inVar
+			this.searchAllElement.innerHTML  = (inVar?"All":"Tab")
+			this.populate();
+
+		},
+
+		update:function(e)
+		{
 			if (this.textElement.value == "")
 			{
 
@@ -632,35 +647,44 @@ function SnowBrushPanel()
 
 		populate:function()
 		{
+
+			//clear previous
 			while (this.brushGroup.firstChild) 
 			{
     			this.brushGroup.removeChild(this.brushGroup.firstChild);
 			}
-//xxx
-/*
-				{
-					var newButton = NBPanel.brushes.createBrushButton(inBrushID)
-					var brushData = JSON.parse(fs.readFileSync(NBPanel.entriesPath+"/"+inBrushID+"/Entry.json", 'utf8'))				
-					this.listTab.brushes.push({data:brushData, id:inBrushID, button:newButton, update:updateLook})*/
 
-					var searchString = this.textElement.value.toLowerCase()
+			var searchString = this.textElement.value.toLowerCase()
 
+			if (this.searchAll) // Search all tabs
+			{
 				for (var i = 0; i < NBPanel.tabs.tabList.length; i++)
 				{
 					for (var j = 0; j < NBPanel.tabs.tabList[i].brushes.length; j++)
 					{
 						if (NBPanel.tabs.tabList[i].brushes[j].data.name.toLowerCase().indexOf(searchString) == -1) continue;
-
-					//	var copyButton = NBPanel.tabs.tabList[i].brushes[j].button.cloneNode(true)
-
 						var copyButton = $(NBPanel.tabs.tabList[i].brushes[j].button).clone(true,true)[0]
-
 
 						copyButton.firstChild.onclick = NBPanel.tabs.tabList[i].brushes[j].button.firstChild.onclick
 						this.brushGroup.appendChild(copyButton);
 					}
-				}
+				}				
+			}
+			else //Search current tab
+			{
+				var i = NBPanel.tabs.activeTab;
+				for (var j = 0; j < NBPanel.tabs.tabList[i].brushes.length; j++)
+				{
+					if (NBPanel.tabs.tabList[i].brushes[j].data.name.toLowerCase().indexOf(searchString) == -1) continue;
+					var copyButton = $(NBPanel.tabs.tabList[i].brushes[j].button).clone(true,true)[0]
 
+					copyButton.firstChild.onclick = NBPanel.tabs.tabList[i].brushes[j].button.firstChild.onclick
+					this.brushGroup.appendChild(copyButton);
+				}
+			}
+
+
+	
 
 
 		},
@@ -1886,7 +1910,7 @@ function SnowBrushPanel()
 			NBPanel.brushes.updateLook()
 			NBPanel.settings.write()
 
-			document.getElementById("toggleLongThumb").childNodes[1].src = inVal ? 'images/Button_LongThumb.png' : 'images/Button_LongThumb_off.png';
+			document.getElementById("toggleLongThumb").childNodes[1].src = inVal ? 'images/buttons/Button_LongThumb.png' : 'images/buttons/Button_LongThumb_off.png';
 		},
 
 		setThumbShort:function(inVal)
@@ -1895,14 +1919,14 @@ function SnowBrushPanel()
 			NBPanel.brushes.updateLook()
 			NBPanel.settings.write()
 
-			document.getElementById("toggleShortThumb").childNodes[1].src = inVal ? 'images/Button_ShortThumb.png' : 'images/Button_ShortThumb_off.png';
+			document.getElementById("toggleShortThumb").childNodes[1].src = inVal ? 'images/buttons/Button_ShortThumb.png' : 'images/buttons/Button_ShortThumb_off.png';
 		},
 
 		setColor:function(inVal)
 		{
 			if (inVal == undefined) inVal = true;
 			NBPanel.settings.values.useColor = inVal;
-			document.getElementById("toggleColor").childNodes[1].src = inVal ? 'images/Button_ColorChange.png' : 'images/Button_ColorChange_off.png';
+			document.getElementById("toggleColor").childNodes[1].src = inVal ? 'images/buttons/Button_ColorChange.png' : 'images/buttons/Button_ColorChange_off.png';
 			NBPanel.brushes.updateLook()
 
 			NBPanel.settings.write()
@@ -1914,7 +1938,7 @@ function SnowBrushPanel()
 			NBPanel.brushes.updateLook()
 			NBPanel.settings.write()
 
-			document.getElementById("toggleTxt").childNodes[1].src = inVal ? 'images/Button_Txt.png' : 'images/Button_Txt_off.png';
+			document.getElementById("toggleTxt").childNodes[1].src = inVal ? 'images/buttons/Button_Txt.png' : 'images/buttons/Button_Txt_off.png';
 		},
 
 	}
@@ -2585,7 +2609,10 @@ function getEntryInc(inPath)
 	return newTab;
 }
 
-
+function keydownSelectAll(e)
+{
+    if (e.keyCode == 65 && e.ctrlKey) {document.getElementById("searchText").select()}
+}
 
 
 
