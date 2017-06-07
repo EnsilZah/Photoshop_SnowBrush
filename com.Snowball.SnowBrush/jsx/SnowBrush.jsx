@@ -1,5 +1,5 @@
 ﻿#include "json2.js"
-//#include "PresetsManager.jsx"
+
 function cID (inVal) { return charIDToTypeID(inVal);}
 function sID (inVal) { return stringIDToTypeID(inVal);}
 
@@ -11,135 +11,9 @@ var entryPrefix = "SB_Entry:"
 var ToolPresets = new ToolPresetManager;
 
 
-
-
-
-// Need to deprecate and replace this with CreateEntryThumbs
-function createThumbs(inFolder)
+function RunFromJSON(inCommand, inJSONData)
 {
-    var inWidth = 256
-    var inHeight = 64
-    var inSize = 64
-    
-    var returnValue = {shortThumb:"", longThumb:""}
-       
-
-    createDoc("TMPBrush", inWidth, inHeight)
-    setZoom(0)
-    createCurve(inWidth,inHeight)
-    setColor(0, 0, 100)     
-    setBGColor(0, 0, 15)
-    setBrushSize(Math.floor(0.9 * inHeight/2))
-    strokePath (true);
-    
-    SavePNGDest(inFolder + "/" + "ThumbLong.png" )
-  
-    //Delete Path
-    var desc79 = new ActionDescriptor();
-    var ref19 = new ActionReference();
-    ref19.putEnumerated( cID( "Path" ), cID( "Ordn" ), cID( "Trgt" ) );
-    desc79.putReference( cID( "null" ), ref19 );
-    executeAction( cID( "Dlt " ), desc79, DialogModes.NO );
-
-    // Delete Layer contents
-    var desc80 = new ActionDescriptor();
-    var ref20 = new ActionReference();
-    ref20.putProperty( cID( "Chnl" ), cID( "fsel" ) );
-    desc80.putReference( cID( "null" ), ref20 );
-    desc80.putEnumerated( cID( "T   " ), cID( "Ordn" ), cID( "Al  " ) );
-    executeAction(  cID( "setd" ), desc80, DialogModes.NO );
-    executeAction(cID( "Dlt " ), undefined, DialogModes.NO );
-
-    //  ResizeCanvas
-    var desc86 = new ActionDescriptor();
-    desc86.putUnitDouble( cID( "Wdth" ), cID( "#Pxl" ), inSize );
-    executeAction( cID( "CnvS" ), desc86, DialogModes.NO );
-
-    createPoint(inSize/2,inSize/2)
-    setBrushSize(inSize*0.8)
-    resetBrush();
-    strokePath (false);
-            
-            
-    SavePNGDest(inFolder + "/" + "ThumbShort.png" )
-
-    activeDocument.close(SaveOptions.DONOTSAVECHANGES);
-}
-
-
-
-function createEntryThumbs (inEntryList, inFolder_Entries)
-{
-
-    //store current tool/brush settings
-
-    try
-    {           
-        var shortThumbSize = {width: 64, height: 64}
-        var longThumbSize =  {width: 256, height: 64}
-        var size = 64;
-        
-        createDoc("TMPBrush", longThumbSize.width, longThumbSize.height)
-        setZoom(0);
-        var longPathName = "curvePath"
-        var shortPathName = "myPoint"
-
-        createPoint(shortThumbSize.width /2 , shortThumbSize.height/2)
-        createCurve(longThumbSize.width, longThumbSize.height)
-
-        
-        var longThumbs = [] 
-        var shortThumbs = [] 
-        
-        for (var i = 0; i < inEntryList.length; i++)
-        {
-            setToolPreset(entryPrefix + inEntryList[i])            
-
-            setColor(0, 0, 100)     
-            setBGColor(0, 0, 15)
-
-            var curLong = inEntryList[i]+"_long"
-            var curShort = inEntryList[i]
-            
-            createLayer(curLong)
-            selectPath("curvePath")
-            setBrushSize(Math.floor(0.9 * size/2))      
-            strokePath (true)
-            longThumbs.push(curLong)
-            
-            createLayer(curShort)
-            selectPath("myPoint")
-            setBrushSize(size*0.8)
-            resetBrush();        
-            strokePath (false)
-            shortThumbs.push(curShort)
-            
-            //report progress
-        }
-
-
-        for (var i = 0; i< longThumbs.length; i++)
-        {
-            isolateLayer (longThumbs[i])
-            SavePNGDest (inFolder_Entries + "/"+ inEntryList[i] +"/ThumbLong.png")
-            
-        }
-
-        cropLeft()
-
-        for (var i = 0; i< shortThumbs.length; i++)
-        {
-        isolateLayer (shortThumbs[i])
-        SavePNGDest (inFolder_Entries + "/"+ inEntryList[i] +"/ThumbShort.png")
-
-        } 
-           
-        activeDocument.close(SaveOptions.DONOTSAVECHANGES);
-    }
-    catch(e)
-    {alert(e)}
-        //restore values
- 
+    return JSON.stringify(eval(inCommand)(JSON.parse(inJSONData)))
 }
 
 //returns a new entry ID with an incremented number from that highest existing one
@@ -163,234 +37,367 @@ function getEntryInc(inPath_Entries)
 }
 
 
-
-function entriesFromABR_NEW (inData)
+//xxx
+/**********************************************************
+************************NEW********************************
+**********************************************************/
+function entriesFromTPL (inData)
 {
-    inData = {pathSource:"", pathEntries:""}
+    //store current colors
+    var tmpFG = app.foregroundColor.rgb
+    var tmpBG = app.backgroundColor.rgb   
+    
+    var listOld = getBrushPresetNames()
 
+
+    var reloadTemp = false;
+    try
+    {
+        File(inData.pathTemp + "/Temp.tpl").remove()
+        ToolPresets.savePresets (inData.pathTemp + "/Temp.tpl")
+        reloadTemp = true;
+
+    }catch(e) {/*List is empty*/}
+
+
+    var mainPresetList = ToolPresets.getPresetList()
+    ToolPresets.replacePresets (inData.pathSource)
+    var importPresetList = ToolPresets.getPresetList()
+
+    var listEntries = []
+    for (var i = 0; i < importPresetList.length; i++)
+    {    
+        ToolPresets.setPresetByName(importPresetList[i])
+
+        try{
+            var curEntry = {name: importPresetList[i], FG: app.foregroundColor.rgb, BG:app.backgroundColor.rgb}
+            createBrushPreset(importPresetList[i])
+            listEntries.push(curEntry)
+        }catch(e){/*In case tool is not convertible to brush*/}
+    }
+
+    if (reloadTemp) {ToolPresets.replacePresets (inData.pathTemp + "/Temp.tpl")}
+    else {/*Remove all tools*/}
+
+
+
+
+
+    var listNew =  getBrushPresetNames()
+    var listOut = []
+    var listIDs = []
+
+    for (var i = listOld.length; i < listNew.length; i++)
+    {
+        var curEntry = {name:listNew[i], index:i+1}
+
+        renameBrushPreset(i+1, "SB_Entry")
+
+
+        var newEntry = getEntryInc(inData.pathEntries);  
+        var curFolder =  Folder(inData.pathEntries +"/" + newEntry)
+        curFolder.create();
+        curEntry.pathDest = curFolder;
+        curEntry.id = newEntry;
+        listIDs.push(newEntry)
+
+        //Write entry data
+        var curBrushEntry = {entry:newEntry, name:listNew[i], type:"BrushTool", colorFG:tmpFG, colorBG:tmpBG}
+        var entryFile = File(curFolder.fullName + "/Entry.json");      
+        entryFile.open("w")
+        entryFile.write(JSON.stringify(curBrushEntry))
+        entryFile.close()
+ 
+        var brushIndex = getBrushPresetNames().length
+        var pathDest = curFolder.fullName + "/Entry.abr"
+        saveABR (i+1, pathDest) 
+        
+        listOut.push(curEntry)
+    }
+   createEntryThumbs(listOut)  
+
+    for (var i = listNew.length - listOld.length; i > 0; i--)
+    {
+            deleteBrush(listOld.length+1)
+    }
+    
+    return(listIDs)
+}
+
+
+
+
+// inData = {pathSource:"", pathEntries:""}
+function entriesFromABR (inData)
+{
+    //store current colors
+    var tmpFG = app.foregroundColor.rgb
+    var tmpBG = app.backgroundColor.rgb   
+    
     var listOld = getBrushPresetNames()
     loadABR(inData.pathSource)
     var listNew =  getBrushPresetNames()
-
     var listOut = []
+    var listIDs = []
 
-    for (var i = listOld.length; i >= listNew.length; i++)
+    for (var i = listOld.length; i < listNew.length; i++)
     {
-        //get name
-        //rename to SB_Entry
-        //create entry
-        //export ABR
-        //add to listOut with current index
+        var curEntry = {name:listNew[i], index:i+1}
+
+        renameBrushPreset(i+1, "SB_Entry")
+
+
+        var newEntry = getEntryInc(inData.pathEntries);  
+        var curFolder =  Folder(inData.pathEntries +"/" + newEntry)
+        curFolder.create();
+        curEntry.pathDest = curFolder;
+        curEntry.id = newEntry;
+        listIDs.push(newEntry)
+
+        //Write entry data
+        var curBrushEntry = {entry:newEntry, name:listNew[i], type:"BrushTool", colorFG:tmpFG, colorBG:tmpBG}
+        var entryFile = File(curFolder.fullName + "/Entry.json");      
+        entryFile.open("w")
+        entryFile.write(JSON.stringify(curBrushEntry))
+        entryFile.close()
+ 
+        var brushIndex = getBrushPresetNames().length
+        var pathDest = curFolder.fullName + "/Entry.abr"
+        saveABR (i+1, pathDest) 
+        
+        listOut.push(curEntry)
     }
+   createEntryThumbs(listOut)  
 
-    //pass listOut to thumb creator
-    //remove added brushes
-    //return listOut
-}
-
-
-
-// Simplify TPL ceation/removal
-function entriesFromABR (inPath_ABR, inPath_Entries)
-{
-    //store current colors
-    var tmpFG = app.foregroundColor.rgb
-    var tmpBG = app.backgroundColor.rgb
-
-
-    setToolToBrush()
-    var oldList =  getBrushPresetNames()
-    loadABR(inPath_ABR)
+    for (var i = listNew.length - listOld.length; i > 0; i--)
+    {
+            deleteBrush(listOld.length+1)
+    }
     
-    var newList =  getBrushPresetNames()   
-    var toolList = ToolPresets.getPresetList()
-
-    listNames = []
-    listIDs = []
-    listBrushFiles = []
-
-
-    for (var i = oldList.length; i<newList.length;i++)
-    {
-        ToolPresets.removePresetByName("SB_Entry")
-
-        var curEntry = getEntryInc(inPath_Entries)
-        listIDs.push(curEntry)      
-  
-        //Create folder
-        var curFolder =  Folder(inPath_Entries + "/" + curEntry)
-        curFolder.create();      
-
-        //Write metadata file
-        var curBrushEntry = {entry:curEntry, name:newList[i], type:"BrushTool", colorFG:tmpFG, colorBG:tmpBG}    
-        var entryFile = File(curFolder.fullName + "/Entry.json");      
-        entryFile.open("w")
-        entryFile.write(JSON.stringify(curBrushEntry))
-        entryFile.close()
-
-        //Create Tool Preset entry
-        setBrushID(i+1)
-        createTool(entryPrefix + curEntry);
-
-    }
-
-    createEntryThumbs(listIDs, inPath_Entries)
-
-    //Export and remove Entries
-    for (var i = listIDs.length-1; i >= 0 ; i--)
-    {
-        ToolPresets.renamePresetByName(entryPrefix + listIDs[i], "SB_Entry")
-        var curIndex = ToolPresets.getLastIndexByName ("SB_Entry")    
-        var curFolder =  Folder(inPath_Entries + "/" + listIDs[i])     
-        ToolPresets.savePresetByIndex (curIndex, curFolder.fullName + "/Entry.tpl")    
-        ToolPresets.removePresetByName("SB_Entry")
-    }
-
-
-    //Remove imported ABR
-    for (var i = newList.length-1; i>=oldList.length;i--)
-    {
-        deleteBrush(i+1)
-    }
-
-    //restore current colors
-    app.foregroundColor.rgb = tmpFG;
-    app.backgroundColor.rgb = tmpBG
-
-    return listIDs;
+    return(listIDs)
 }
 
-// Improvement TODO: Do brush loading without unloading first (new brushes are added after existing brush with duplicate name)
-function entriesFromTPL (inPath_TPL,  inPath_Temp, inPath_Entries)
+//inPath_Entries, inBrushID, inBrushName
+function createEntryFromExisting(inData)
 {
+    try{
     //store current colors
     var tmpFG = app.foregroundColor.rgb
     var tmpBG = app.backgroundColor.rgb
 
-
-    ToolPresets.removePresetByName("SB_Entry")    
-    try
-    {
-        File(inPath_Temp + "/Temp.tpl").remove()
-        ToolPresets.savePresets (inPath_Temp + "/Temp.tpl")
-    }
-    catch(e)
-    {alert(e);}
-
-    var mainPresetList = ToolPresets.getPresetList()
-    ToolPresets.replacePresets (inPath_TPL)
-    var importPresetList = ToolPresets.getPresetList()
-    var importTypeList = ToolPresets.getTypeList();
- 
-    var listIDs = [];
-
-   
-   //reverse order because renaming is not updating tool preset properly
-    for (var i = importPresetList.length-1; i >= 0; i--)
-    {        
-        //Skip non-brush presets
-        if (importTypeList[i] != "Brush Tool") {continue;}
-
-        //get new entry name
-        var curEntry = getEntryInc(inPath_Entries)    
-        listIDs.push(curEntry)      
-  
-        //Create folder
-        var curFolder =  Folder(inPath_Entries + "/" + curEntry)
-        curFolder.create();      
-
-        //Sample color of tool preset
-        ToolPresets.setPresetByName(importPresetList[i])
-        var curFG = app.foregroundColor.rgb
-        var curBG = app.backgroundColor.rgb
-
-
-        //Write metadata file
-        var curBrushEntry = {entry:curEntry, name:importPresetList[i], type:"BrushTool", colorFG:curFG, colorBG:curBG}    
-        var entryFile = File(curFolder.fullName + "/Entry.json");      
-        entryFile.open("w")
-        entryFile.write(JSON.stringify(curBrushEntry))
-        entryFile.close()
-
-        var curIndex = ToolPresets.getIndexByName (importPresetList[i])   
-        ToolPresets.renamePresetByIndex(curIndex, entryPrefix + curEntry)
-    }
-
-    createEntryThumbs(listIDs, inPath_Entries)
- 
-
-    //Export and remove Entries
-    for (var i = listIDs.length-1; i >= 0 ; i--)
-    {
-        ToolPresets.renamePresetByName(entryPrefix + listIDs[i], "SB_Entry")
-        var curIndex = ToolPresets.getLastIndexByName ("SB_Entry")    
-        var curFolder =  Folder(inPath_Entries + "/" + listIDs[i])     
-        ToolPresets.savePresetByIndex (curIndex, curFolder.fullName + "/Entry.tpl")    
-        ToolPresets.removePresetByName("SB_Entry")
-    }
-
-
-    ToolPresets.replacePresets (inPath_Temp + "/Temp.tpl")
-
-    //restore current colors
-    app.foregroundColor.rgb = tmpFG;
-    app.backgroundColor.rgb = tmpBG
-
-
-    return listIDs.reverse();        
-}
-
-
-function createEntryFromExisting(inPath_Entries, inBrushID, inBrushName)
-{
-    //store current colors
-    var tmpFG = app.foregroundColor.rgb
-    var tmpBG = app.backgroundColor.rgb
-
-
-    ToolPresets.removePresetByName("SB_Entry")
-    var newEntry = getEntryInc(inPath_Entries);  
-    var curFolder =  Folder(inPath_Entries +"/" + newEntry)
+    var newEntry = getEntryInc(inData.pathEntries);  
+    var curFolder =  Folder(inData.pathEntries +"/" + newEntry)
     curFolder.create();
     
-
     //if no brush name is supplied, generate from current
-    if (inBrushName == undefined)
-    {
-        inBrushName = getCurrentBrushName()
-    }
+    if (inData.brushName == undefined)
+    { inData.brushName = getCurrentBrushName(); }
 
     //Write entry data
-    var curBrushEntry = {entry:newEntry, name:inBrushName, type:"BrushTool", colorFG:tmpFG, colorBG:tmpBG}
+    var curBrushEntry = {entry:newEntry, name:inData.brushName, type:"BrushTool", colorFG:tmpFG, colorBG:tmpBG}
     var entryFile = File(curFolder.fullName + "/Entry.json");      
     entryFile.open("w")
     entryFile.write(JSON.stringify(curBrushEntry))
     entryFile.close()
 
     //If no brush ID is supplied, use current selected brush
-    if (inBrushID != undefined)
-    {
-        setBrushID (inBrushID)
-    }
+    if (inData.brushID != undefined)
+    { setBrushID (inData.brushID) }
 
-    createTool("SB_Entry");
-   
-    saveTool ("SB_Entry" ,curFolder.fullName + "/Entry.tpl");
-    createThumbs(curFolder.fullName)    
- 
-    ToolPresets.removePresetByName("SB_Entry")
+    createBrushPreset("SB_Entry")
+    var brushIndex = getBrushPresetNames().length
+    var pathDest = curFolder.fullName + "/Entry.abr"
+    saveABR (brushIndex, pathDest)
 
+    curEntry = [{index:brushIndex, pathDest:inData.pathEntries + "/" + newEntry + "/"}]
+    createEntryThumbs(curEntry)    
+
+    deleteBrush(brushIndex)
 
     //restore current colors
     app.foregroundColor.rgb = tmpFG;
     app.backgroundColor.rgb = tmpBG
 
-    return newEntry;    
+    return [newEntry]; 
+}catch(e){alert(e)}
 }
 
 
 
+// entryList[i] = {index:..., id:..., pathDest:..., }
+function createEntryThumbs (inEntryList)
+{
+    //store current tool/brush settings
+    var shortThumbSize = {width: 64, height: 64}
+    var longThumbSize =  {width: 256, height: 64}
+    var size = 64;
+    
+    createDoc("TMPBrush", longThumbSize.width, longThumbSize.height)
+    setZoom(0);
+    var longPathName = "curvePath"
+    var shortPathName = "myPoint"
 
+    createPoint(shortThumbSize.width /2 , shortThumbSize.height/2)
+    createCurve(longThumbSize.width, longThumbSize.height)
+ 
+    thumbList = []
+    setToolToBrush();
+
+    for (var i = 0; i < inEntryList.length; i++)
+    {
+        var curEntry = {data: inEntryList[i]}
+        setBrushID(inEntryList[i].index)        
+
+        setColor(0, 0, 100)     
+        setBGColor(0, 0, 15)
+       
+
+        var layerLongName = inEntryList[i].index+"_ThumbLong"
+        createLayer(layerLongName)
+        selectPath("curvePath")
+        setBrushSize(Math.floor(0.9 * size/2))      
+        strokePath (true)
+        curEntry.layerLongName = layerLongName;
+
+        var layerShortName = inEntryList[i].index+"_ThumbShort"
+        createLayer(layerShortName)
+        selectPath("myPoint")
+        setBrushSize(size*0.8)
+        resetBrush();        
+        strokePath (false)
+        curEntry.layerShortName = layerShortName;
+
+        thumbList.push(curEntry)
+        //report to progress bar
+    }
+
+    for (var i = 0; i< thumbList.length; i++)
+    {
+        isolateLayer (thumbList[i].layerLongName)
+        SavePNGDest (thumbList[i].data.pathDest +"/ThumbLong.png")
+    }
+
+    cropLeft()
+
+    for (var i = 0; i< thumbList.length; i++)
+    {
+        isolateLayer (thumbList[i].layerShortName)
+        SavePNGDest (thumbList[i].data.pathDest +"/ThumbShort.png")
+    } 
+       
+    activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+    //restore values
+}
+
+
+function setEntryPath(inEntryPath, inColorFG, inColorBG)
+{
+
+    var tmpFG = app.foregroundColor.rgb
+    var tmpBG = app.backgroundColor.rgb
+
+
+    loadABR(inEntryPath)
+    var listBrushes = getBrushPresetNames()  
+    // add test for which tool is currently selected and select brush if it's a non-brushable tool
+    setBrushID(listBrushes.length)
+
+    if ((inColorFG != undefined) && (inColorFG != 'undefined'))
+    {
+         var curColorFG = JSON.parse(inColorFG)
+         app.foregroundColor.rgb.red = curColorFG.red
+         app.foregroundColor.rgb.green = curColorFG.green
+         app.foregroundColor.rgb.blue = curColorFG.blue
+    }
+    else
+    {
+        app.foregroundColor.rgb = tmpFG
+    }
+
+    if ((inColorBG != undefined) && (inColorBG != 'undefined'))
+    {
+         var curColorBG = JSON.parse(inColorBG)
+         app.backgroundColor.rgb.red = curColorBG.red
+         app.backgroundColor.rgb.green = curColorBG.green
+         app.backgroundColor.rgb.blue = curColorBG.blue
+    }
+    else
+    {
+        app.backgroundColor.rgb = tmpBG
+    }
+
+    deleteBrush(listBrushes.length)
+    //remove previous "SB_Entry" brushes in case of crash while running or something
+}
+
+function setToolKeepPreset(inToolID)
+{
+    var createdPreset = false;
+    try
+    {
+        createBrushPreset("tmpSB")
+        createdPreset = true;
+    }
+    catch(e){}
+
+
+    setTool(inToolID)
+
+    if (createdPreset)
+    {
+        var curIndex = getBrushPresetNames().length
+        setBrushID(curIndex) 
+        deleteBrush(curIndex)
+
+    }
+}
+
+
+/*     PS Functions          */
+/*****************************/
+
+function createBrushPreset(inName)
+{
+    var desc3163 = new ActionDescriptor();
+    var ref609 = new ActionReference();
+    ref609.putClass( cID( "Brsh" ) );
+    desc3163.putReference( cID( "null" ), ref609 );
+    desc3163.putString( cID( "Nm  " ), inName );
+    var ref610 = new ActionReference();
+    ref610.putProperty( cID( "Prpr" ), cID( "CrnT" ) );
+    ref610.putEnumerated( cID( "capp" ), cID( "Ordn" ), cID( "Trgt" ) );
+    desc3163.putReference( cID( "Usng" ), ref610 );
+    executeAction( cID( "Mk  " ), desc3163, DialogModes.NO );
+}
+
+function saveABR (inIndex, inPath)
+{
+    var desc758 = new ActionDescriptor();
+    desc758.putPath( cID( "null" ), new File( inPath ) );
+    var list81 = new ActionList();
+    var ref366 = new ActionReference();
+    ref366.putIndex( cID( "Brsh" ), inIndex );
+    list81.putReference( ref366 );
+    desc758.putList( cID( "T   " ), list81 );
+    executeAction( cID( "setd" ), desc758, DialogModes.NO );
+}    
+
+
+function renameBrushPreset(inIndex, inName)
+{
+    var desc21 = new ActionDescriptor();
+    var ref4 = new ActionReference();
+    ref4.putIndex( cID( "Brsh" ), inIndex );
+    desc21.putReference( cID( "null" ), ref4 );
+    desc21.putString( cID( "T   " ), inName );
+    executeAction( cID( "Rnm " ), desc21, DialogModes.NO );
+}
+
+
+
+/**********************************************************
+************************END OF NEW*************************
+**********************************************************/
 
 
 
@@ -615,32 +622,6 @@ function ToolPresetManager()
 
 }
 
-function appendPreset (inFile)
-{
-    var desc322 = new ActionDescriptor();
-    var ref231 = new ActionReference();
-    ref231.putProperty( cID( "Prpr" ), sID( "toolPreset" ) );
-    ref231.putEnumerated( cID( "capp" ), cID( "Ordn" ), cID( "Trgt" ) );
-    desc322.putReference( cID( "null" ), ref231 );
-    desc322.putPath( cID( "T   " ), new File( inFile ) );
-    desc322.putBoolean( cID( "Appe" ), true );
-    executeAction( cID( "setd" ), desc322, DialogModes.NO );
-}
-
-
-
-
-function getTPLFileList (inPath)
-{
-     /// INCLUDE .ABR
-    var tmp = Folder(inPath).getFiles ("*.tpl")
-    var fileList = []
-    for (var i = 0; i < tmp.length; i++)
-    {
-        fileList.push(tmp[i].name.substring (0, tmp[i].name.toLowerCase().indexOf ('.tpl'))); 
-    }
-    return fileList
-}
 
 
 
@@ -662,85 +643,6 @@ function setToolPreset(inName)
     ref1.putName( idtoolPreset, inName );
     desc3.putReference( cID( "null" ), ref1 );
     executeAction( cID( "slct" ), desc3, DialogModes.NO );
-}
-
-
-function setEntryPath(inEntryPath, inColorFG, inColorBG)
-{
-    var tmpFG = app.foregroundColor.rgb
-    var tmpBG = app.backgroundColor.rgb
-
-    ToolPresets.removePresetByName("SB_Entry")
-    ToolPresets.appendPresets(inEntryPath)
-    setToolPreset("SB_Entry")
-     
-    if ((inColorFG != undefined) && (inColorFG != 'undefined'))
-    {
-         var curColorFG = JSON.parse(inColorFG)
-         app.foregroundColor.rgb.red = curColorFG.red
-         app.foregroundColor.rgb.green = curColorFG.green
-         app.foregroundColor.rgb.blue = curColorFG.blue
-    }
-    else
-    {
-        app.foregroundColor.rgb = tmpFG
-    }
-
-    if ((inColorBG != undefined) && (inColorBG != 'undefined'))
-    {
-         var curColorBG = JSON.parse(inColorBG)
-         app.backgroundColor.rgb.red = curColorBG.red
-         app.backgroundColor.rgb.green = curColorBG.green
-         app.backgroundColor.rgb.blue = curColorBG.blue
-    }
-    else
-    {
-        app.backgroundColor.rgb = tmpBG
-    }
-
-
-    ToolPresets.removePresetByName("SB_Entry")       
-}
-
-
-function setToolKeepPreset(inToolID)
-{
-    var createdPreset = false;
-    try
-    {
-        saveBrushPreset("tmpSB")
-        createdPreset = true;
-    }
-    catch(e){}
-
-
-    setTool(inToolID)
-
-    if (createdPreset)
-    {
-        var curIndex = getBrushPresetNames().length
-        setBrushID(curIndex) 
-        deleteBrush(curIndex)
-
-    }
-
-
-
-}
-
-
-function saveBrushPreset(inName)
-{
-    var desc3163 = new ActionDescriptor();
-    var ref609 = new ActionReference();
-    ref609.putClass( cID( "Brsh" ) );
-    desc3163.putReference( cID( "null" ), ref609 );
-    desc3163.putString( cID( "Nm  " ), inName );
-    var ref610 = new ActionReference();
-    ref610.putProperty( cID( "Prpr" ), cID( "CrnT" ) );
-    ref610.putEnumerated( cID( "capp" ), cID( "Ordn" ), cID( "Trgt" ) );
-    desc3163.putReference( cID( "Usng" ), ref610 );
-    executeAction( cID( "Mk  " ), desc3163, DialogModes.NO );
 }
 
 

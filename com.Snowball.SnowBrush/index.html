@@ -172,11 +172,9 @@
 	</body>
 </html>
 
-
-
-
-<script>
-
+<script> //HTML related stuff
+window.addEventListener("dragover",function(e){e = e || event; e.preventDefault();},false);
+window.addEventListener("drop",function(e){e = e || event; e.preventDefault();},false);
 
 //Prevent drag-select
 document.onselectstart = function(e)
@@ -186,9 +184,7 @@ document.onselectstart = function(e)
     e.cancelBubble=true;
     e.returnValue=false;
     return false;
-};
-
-
+};	
 
 function onDocResize()
 {
@@ -203,128 +199,51 @@ function onDocResize()
 		heightOffest += containerBar.parentElement.children[i].offsetHeight
 	}
 
-	//var bottomOffest = 0;
-
 	//Make sure ContainerBar fills the same area as tab bar pushes it down.
 	containerBar.style.top=heightOffest+"px"
 	containerBar.style.height = document.body.scrollHeight + 24 - heightOffest + "px"
 }
+</script>
 
 
-window.addEventListener("dragover",function(e){e = e || event; e.preventDefault();},false);
-window.addEventListener("drop",function(e){e = e || event; e.preventDefault();},false);
-
-
+<script>	//Main code
 
 var NBPanel = null;
-
-function runJSX (inCommand, inCallback)
-{
-	var jsonCommand = "JSON.stringify (" + inCommand + ");"  
-	csInterface.evalScript (jsonCommand, function(retVal) {inCallback(JSON.parse(retVal))});
-}
 
 function onLoadedDoc()
 {
 	NBPanel = new SnowBrushPanel();
 	NBPanel.initialize();
-	onDocResize();
-
-
-	function checkOverflow(el)
-	{
-	   var curOverflow = el.style.overflow;
-
-	   if ( !curOverflow || curOverflow === "visible" )
-	      el.style.overflow = "hidden";
-
-	   var isOverflowing = el.clientWidth < el.scrollWidth 
-	      || el.clientHeight < el.scrollHeight;
-
-	   el.style.overflow = curOverflow;
-
-	   return isOverflowing;
-	}
-
-	var lastTab = NBPanel.brushGroups.brushGroup[NBPanel.brushGroups.brushGroup.length -1].tabButton
-
-}
-
-
-function onShareChanged (event, filename)
-{
-	 NBPanel.sharedTab.refresh();
-}
-
-
-function setShareLocation()
-{
-	var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Share Location:", null,null, "Open Share Path").data;
-	if (currentFile == null || currentFile == "") return;
-
-	fs.unwatchFile(NBPanel.settings.values.shareLocation + "/manifest.json")
-	NBPanel.settings.values.shareLocation = currentFile;
-	NBPanel.settings.write();
-
-	fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, onShareChanged);
-	onShareChanged()
 }
 
 
 function AddFromFile()
 {
+	var curFile = window.cep.fs.showOpenDialogEx(false,false,"Brush File:", "%USERPROFILE%/Desktop",["abr","tpl","zip"], "Brush Files").data;
+	if (curFile == "") return;
+	curFile = curFile[0];
 
-	var curFile = ""
-
-
-	var currentFile = window.cep.fs.showOpenDialogEx(false,false,"Brush File:", "%USERPROFILE%/Desktop",["abr","tpl","zip"], "Brush Files").data;
-	if (currentFile == "") return;
-	
 	openModal("Processing...")
 
+	var dataJSX = {pathSource:curFile, pathEntries:NBPanel.entriesPath, pathTemp:NBPanel.tempPath}
 
-	curFile = currentFile[0];
-
-	var command = ""
-
-	var curExtension = curFile.substring(curFile.lastIndexOf(".")+1).toLowerCase()
-
+	var curExtension = path.parse(curFile).ext.toLowerCase()
 	switch(curExtension)
 	{
-	
-		case "abr":
-			command = "entriesFromABR('" + curFile + "', '" + doubleDashes(NBPanel.entriesPath) +"')"
+		case ".abr":
+			command = 
+			JSONtoJSX("entriesFromABR", dataJSX, callbackCreateEntries)
 			break;
-		case "tpl":
-			command = "entriesFromTPL('" + curFile + "', '" +  doubleDashes(NBPanel.tempPath) + "', '" + doubleDashes(NBPanel.entriesPath) +"')"
+		case ".tpl":
+			JSONtoJSX("entriesFromTPL", dataJSX, callbackCreateEntries)
 			break;
-	
-		case "zip":
+		case ".zip":
 			importZip(curFile);
-			return;
 			break;
-
 		default:
 			alert("Error importing file!")
-			return;
-
-	}
-
-	runJSX(command, function(retVal)
-	{
-		
-		var curTab = NBPanel.tabs.tabList[NBPanel.tabs.activeTab]
-
-		for (var i = 0; i < retVal.length; i++)
-		{	
-				curTab.data.brushes.push(retVal[i])
-				NBPanel.tabs.tabCurrent().appendBrush(retVal[i])
-		}
-
-		NBPanel.tabs.tabCurrent().writeFile()		
-		NBPanel.brushes.updateLook()
-		closeModal()
-	})
+			break;
+	}	
 }
 
 
@@ -524,22 +443,40 @@ function importSingleTab(inPath_Temp)
 function AddCurrentTool()
 {
 	openModal("Processing...")
-	csInterface.evalScript("getCurrentTool()", function(retVal1)
-	{
-		if (retVal1 != "paintbrushTool")
-			return;
 
-			var command = "createEntryFromExisting('" + NBPanel.entriesPath +"')"
-
-			runJSX(command, function(retVal)
-			{
-				NBPanel.tabs.tabCurrent().listTab.data.brushes.push(retVal)
-				NBPanel.tabs.tabCurrent().writeFile()
-				NBPanel.tabs.tabCurrent().appendBrush(retVal)
-				closeModal()
-			})
-	})
+	//TODO: Need to ensure we are using correct tool type.
+	var dataJSX = {pathEntries:NBPanel.entriesPath, pathTemp:NBPanel.tempPath}
+	var command = "createEntryFromExisting"
+	JSONtoJSX(command, dataJSX, callbackCreateEntries)
 }
+
+
+
+
+callbackCreateEntries = function(retVal)
+{
+	var curTab = NBPanel.tabs.tabList[NBPanel.tabs.activeTab]
+
+	for (var i = 0; i < retVal.length; i++)
+	{	
+			curTab.data.brushes.push(retVal[i])
+			NBPanel.tabs.tabCurrent().appendBrush(retVal[i])
+	}
+
+	NBPanel.tabs.tabCurrent().writeFile()		
+	NBPanel.brushes.updateLook()
+	closeModal()
+}
+
+
+
+
+
+
+
+
+
+
 
 
 function SnowBrushPanel()
@@ -550,6 +487,7 @@ function SnowBrushPanel()
 	this.entriesPath = this.dataPath + "Entries/"
 
 
+	//TODO: make sure recent brush button is removed when brush is removed.
 	this.recentBrushes=
 	{
 		element: document.getElementById("RecentBar"),
@@ -569,7 +507,7 @@ function SnowBrushPanel()
 
 		add:function(inBrushPath)
 		{
-			inBrushPath = inBrushPath.substring(0,inBrushPath.indexOf("/Entry.tpl"))
+			inBrushPath = inBrushPath.substring(0,inBrushPath.indexOf("/Entry.abr"))
 
 			var btn = document.createElement("BUTTON");
 			btn.className = "recentBrushButton"
@@ -682,16 +620,10 @@ function SnowBrushPanel()
 					this.brushGroup.appendChild(copyButton);
 				}
 			}
-
-
-	
-
-
 		},
 
 		init:function()
 		{
-			
 			//create tab body
 		    var brushGroupElement = document.createElement("div");
 			brushGroupElement.id = "searchResultBrushGroup"
@@ -722,7 +654,6 @@ function SnowBrushPanel()
 			id:"PbTl",
 			set:function()
 			{	
-
 				csInterface.evalScript("setToolKeepPreset('"+this.id+"')");
 			},		
 		},
@@ -813,7 +744,9 @@ function SnowBrushPanel()
 			var tabEntry = inBrush.tabEntry;
 			var id = inBrush.tabEntry.id
 			
-			runJSX("pickColor()", function(retVal)
+
+
+			JSONtoJSX("pickColor", {}, function(retVal)
 			{
 				if (retVal == null) return;
 				curElement.style.backgroundColor ="rgb("+Math.floor(retVal.red)+","+Math.floor(retVal.green)+","+Math.floor(retVal.blue)+")"
@@ -925,10 +858,6 @@ function SnowBrushPanel()
 			var brushData = JSON.parse(fs.readFileSync(inPath+"/Entry.json", 'utf8'))
 
 
-
-
-
-
 			var inName = inID;
 			var inDisplayName = brushData.name;
 		    var btnGrp = document.createElement("div");
@@ -941,7 +870,7 @@ function SnowBrushPanel()
 
 			var stringFG = "JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorFG)"
 			var stringBG ="JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorBG)"
-			btn.dataset.script = "setEntryPath('" + inPath + "/Entry.tpl" + "'," + stringFG + "," + stringBG + ")";
+			btn.dataset.script = "setEntryPath('" + inPath + "/Entry.abr" + "'," + stringFG + "," + stringBG + ")";
 
 			btn.className = "BrushButton"
 			btn.value = inName
@@ -1075,7 +1004,7 @@ function SnowBrushPanel()
 
 			var stringFG = "JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorFG)"
 			var stringBG ="JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorBG)"
-			var stringPath = NBPanel.entriesPath+"/"+inBrushID+"/Entry.tpl"
+			var stringPath = NBPanel.entriesPath+"/"+inBrushID+"/Entry.abr"
 
 
 
@@ -1256,6 +1185,23 @@ function SnowBrushPanel()
 		tabButton:null,
 		tabBody:null,
 
+		onFolderChange:function (event, filename)
+		{
+			NBPanel.sharedTab.refresh();
+		},
+
+		setPath:function()
+		{
+			var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Share Location:", null,null, "Open Share Path").data;
+			if (currentFile == null || currentFile == "") return;
+
+			fs.unwatchFile(NBPanel.settings.values.shareLocation + "/manifest.json")
+			NBPanel.settings.values.shareLocation = currentFile;
+			NBPanel.settings.write();
+
+			fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
+			NBPanel.sharedTab.onFolderChange()
+		},
 
 		brush:function(inID)
 		{
@@ -1348,7 +1294,7 @@ function SnowBrushPanel()
 
 
 
-			fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, onShareChanged);
+			fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
 		},
 
 		loadEntriesNoManifest:function()
@@ -2010,10 +1956,8 @@ function SnowBrushPanel()
 		NBPanel.tabs.init();
 		NBPanel.search.init();
 
-		//NBPanel.settings.showTools(false)
-
-
 		NBPanel.brushes.updateLook()
+		onDocResize();
 	}
 
 
@@ -2094,7 +2038,7 @@ function contextSharedTab()
  	switch(res)
  	{
 		case "menuSetPath":
-			setShareLocation();
+			NBPanel.sharedTab.setPath();
 			break;
 		case "menuOpenPath":
 			csInterface.evalScript("Folder('"+NBPanel.settings.values.shareLocation+"').execute();");
@@ -2252,15 +2196,9 @@ function onDrop(event)
 			brushID = data.assetList[0].data[0]
 			brushName = data.assetList[0].name
 
-			var command = "createEntryFromExisting('" + NBPanel.entriesPath + "' , '"+  brushID +"','" +  brushName +"')"
-
-			runJSX(command, function(retVal)
-			{
-				NBPanel.tabs.tabCurrent().listTab.data.brushes.push(retVal)
-				NBPanel.tabs.tabCurrent().writeFile()
-				NBPanel.tabs.tabCurrent().appendBrush(retVal)
-				closeModal();
-			})
+			var dataJSX = {pathEntries:NBPanel.entriesPath, pathTemp:NBPanel.tempPath, brushID:brushID, brushName:brushName}
+			var command = "createEntryFromExisting"
+			JSONtoJSX(command, dataJSX, callbackCreateEntries)
 		}
 	})
 }
