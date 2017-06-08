@@ -1,0 +1,27 @@
+<div id="modalAbout" class="modal" onclick="Modal_About.close()">
+	<div class="modal-content" style="width:200px">
+		<p id="modalText">SnowBrush v0.6</p>
+		<p id="modalText2" style="font-size:10px">Created by Tammuz Kay at Snowball Studios</p>
+    	<img src='images/SnowballLogo.png' alt='' align='center' style="height:100%; width:100%">
+	</div>
+</div>
+
+<script>
+
+var Modal_About =
+{
+	element: document.getElementById("modalAbout"),
+
+	open:function()
+	{
+		this.element.style.display = "block";
+	},
+
+	close:function()
+	{
+		this.element.style.display = "none";
+	},
+}
+
+
+</script>

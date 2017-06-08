@@ -1,0 +1,27 @@
+	<div id="modalLoading" class="modal">
+		<div class="modal-content">
+    		<p id="modalText">Processing</p>
+	    	<img src='images/load.gif' alt='' align='center' style="height:25px; width:25px">
+		</div>
+	</div>
+
+<script>
+
+var Modal_Loading =
+{
+	element: document.getElementById("modalLoading"),
+
+	open:function(inText)
+	{
+		this.element.innerHTML  = inText
+		this.element.style.display = "block";
+	},
+
+	close:function()
+	{
+		this.element.style.display = "none";
+	},
+}
+
+
+</script>

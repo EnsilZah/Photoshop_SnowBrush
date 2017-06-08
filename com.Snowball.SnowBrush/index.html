@@ -23,29 +23,19 @@
 		<meta charset="utf-8">
 	</head>
 
-	<body id="mainBody" onresize="onDocResize()" onLoad="onLoadedDoc();" style="overflow: hidden; padding:0px; margin:0px; height:100%" ondrop='onDrop(event)'>
+	<body id="mainBody" onresize="NBPanel.event.resizeDoc()" onLoad="onLoadedDoc();" style="overflow: hidden; padding:0px; margin:0px; height:100%" ondrop='NBPanel.import.dropped(event)'>
 
 
-	<span id="ModalSettingsContainer" style="margin: 0 0 0 0;"></span>
-	<script>$("#ModalSettingsContainer").load("HTML/Modals/Ext_Settings.html");</script>
+	<span id="Modal_Settings_Container" style="margin: 0 0 0 0;"></span>
+	<script>$("#Modal_Settings_Container").load("HTML/Modals/Modal_Settings.html");</script>
+
+	<span id="Modal_About_Container" style="margin: 0 0 0 0;"></span>
+	<script>$("#Modal_About_Container").load("HTML/Modals/Modal_About.html");</script>
+
+	<span id="Modal_Loading_Container" style="margin: 0 0 0 0;"></span>
+	<script>$("#Modal_Loading_Container").load("HTML/Modals/Modal_Loading.html");</script>
 
 
-
-
-	<div id="myModal" class="modal">
-		<div class="modal-content">
-    		<p id="modalText">Processing</p>
-	    	<img src='images/load.gif' alt='' align='center' style="height:25px; width:25px">
-		</div>
-	</div>
-
-	<div id="modalAbout" class="modal" onclick="document.getElementById('modalAbout').style.display = 'none';">
-		<div class="modal-content" style="width:200px">
-    		<p id="modalText">SnowBrush v0.6</p>
-    		<p id="modalText2" style="font-size:10px">Created by Tammuz Kay at Snowball Studios</p>
-	    	<img src='images/SnowballLogo.png' alt='' align='center' style="height:100%; width:100%">
-		</div>
-	</div>
 
 
 	<div style="padding:0;margin:0">
@@ -124,17 +114,17 @@
 						<img src='images/buttons/settings.png' alt=''  style="opacity:.5"/>
 						</button>
 
-						<button id='btn_AddTool' onclick="AddCurrentTool()" class="toolButton" title="Add current" style="position:relative; margin-left:5px; top:-5px; height:15px; " >
+						<button id='btn_AddTool' onclick="NBPanel.import.currentTool()" class="toolButton" title="Add current" style="position:relative; margin-left:5px; top:-5px; height:15px; " >
 							<img src='images/buttons/AddBrush.png' alt='' style="opacity:.5"/>
 						</button>
 
-						<button id='btn_AddFromFile' onclick="AddFromFile()" class="toolButton" title="Import File" style="position:relative; top:-5px; height:15px;" >
+						<button id='btn_AddFromFile' onclick="NBPanel.import.file()" class="toolButton" title="Import File" style="position:relative; top:-5px; height:15px;" >
 							<img src='images/buttons/AddFile.png' alt=''  style="opacity:.5"/>
 						</button>
 					</td>
 
 					<td >
-						 <input class="slider" type="range" id="sizeSlider" value="64" min ="16" max = "64" style ="width:100%; position:relative;top:-4px" oninput = "NBPanel.brushes.updateLook()" onchange="sliderChange()">
+						 <input class="slider" type="range" id="sizeSlider" value="64" min ="16" max = "64" style ="width:100%; position:relative;top:-4px" oninput = "NBPanel.event.sliderChanging()" onchange="NBPanel.event.sliderChanged()">
 					</td >
 
 
@@ -173,6 +163,8 @@
 </html>
 
 <script> //HTML related stuff
+
+
 window.addEventListener("dragover",function(e){e = e || event; e.preventDefault();},false);
 window.addEventListener("drop",function(e){e = e || event; e.preventDefault();},false);
 
@@ -186,274 +178,43 @@ document.onselectstart = function(e)
     return false;
 };	
 
-function onDocResize()
+
+
+function allowDrop(ev)
 {
-	var containerBar = document.getElementById("ContainerBar")
-
-	var nodes = Array.prototype.slice.call( containerBar.parentElement.children );
-
-	var curElement = nodes.indexOf( containerBar );
-	var heightOffest = 0
-	for (var i = 0; i < nodes.indexOf( containerBar ); i++)
-	{
-		heightOffest += containerBar.parentElement.children[i].offsetHeight
-	}
-
-	//Make sure ContainerBar fills the same area as tab bar pushes it down.
-	containerBar.style.top=heightOffest+"px"
-	containerBar.style.height = document.body.scrollHeight + 24 - heightOffest + "px"
+	ev.preventDefault();
 }
-</script>
+
+function removeElement(inElement)
+{
+	inElement.parentElement.removeChild(inElement)
+}
 
 
-<script>	//Main code
+
+
+
+
+
+
+
+
+//Main code
 
 var NBPanel = null;
 
 function onLoadedDoc()
 {
 	NBPanel = new SnowBrushPanel();
+
 	NBPanel.initialize();
 }
 
 
-function AddFromFile()
-{
-	var curFile = window.cep.fs.showOpenDialogEx(false,false,"Brush File:", "%USERPROFILE%/Desktop",["abr","tpl","zip"], "Brush Files").data;
-	if (curFile == "") return;
-	curFile = curFile[0];
-
-	openModal("Processing...")
-
-	var dataJSX = {pathSource:curFile, pathEntries:NBPanel.entriesPath, pathTemp:NBPanel.tempPath}
-
-	var curExtension = path.parse(curFile).ext.toLowerCase()
-	switch(curExtension)
-	{
-		case ".abr":
-			command = 
-			JSONtoJSX("entriesFromABR", dataJSX, callbackCreateEntries)
-			break;
-		case ".tpl":
-			JSONtoJSX("entriesFromTPL", dataJSX, callbackCreateEntries)
-			break;
-		case ".zip":
-			importZip(curFile);
-			break;
-		default:
-			alert("Error importing file!")
-			break;
-	}	
-}
 
 
 
-// Exports a single brush
-function exportBrush(inBrushID)
-{
-
-	var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Export Location:", null,null, "EXPORT HERE").data;
-	if (currentFile == "" ) {return;}
-
-	openModal("Processing...")
-
-	var tmpFolder = NBPanel.tempPath + "/zip"
-
-	fs.removeSync(tmpFolder);
-	fs.mkdirSync(tmpFolder);
-
-	
-    var manifestFile = tmpFolder + "/NB_Manifest.json"
-    var manifestData = {name:"NB_Manifest", version:"0002", type:"SINGLEBRUSH"}
-	fs.writeFileSync(manifestFile, JSON.stringify(manifestData))
-
-    var pathTempEntries = tmpFolder + "/Entries"
-	fs.mkdirSync(pathTempEntries);
-
-
-	var newEntryID = getEntryInc(pathTempEntries)
-	var savePath = pathTempEntries+"/" + newEntryID
-	fs.mkdirSync(savePath);
-
-
-	var entryPath = NBPanel.entriesPath + inBrushID;
-	fs.copySync(entryPath, savePath)
-
-
- 	var sourcePath = tmpFolder
- 	var inBrushName = NBPanel.brushes.brush(inBrushID).tabEntry.data.name
- 	var destPath = currentFile+"/" + "NBBRUSH_" + inBrushName + ".zip"
-
-	zipper.zip(sourcePath, function(error, zipped)
-	{
-		if (error)
-		{alert("Error compressing file.");fs.removeSync(tmpFolder); return;}
-
-        zipped.compress(); 		 
-        zipped.save(destPath, function(error)
-        {
-        	fs.removeSync(tmpFolder);
-        	if (error)
-			{alert("Error saving file.");return;}
-    		closeModal()
-        });
-	});
-
-
-}
-
-function exportTab(inTabID)
-{
-	var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Export Location:", null,null, "EXPORT HERE").data;
-	if (currentFile == "" ) {closeModal(); return;}
-
-	openModal("Processing...")
-
-	//Create temp zip folder
-	var tmpFolder = NBPanel.tempPath + "/zip"
-	fs.removeSync(tmpFolder);
-	fs.mkdirSync(tmpFolder);
-
-	//Create manifest file
-    var manifestFile = tmpFolder + "/NB_Manifest.json"
-    var manifestData = {name:"NB_Manifest", version:"0002", type:"SINGLETAB"}
-	fs.writeFileSync(manifestFile, JSON.stringify(manifestData))
-
-	//Copy tab data
-    var pathTempTabs = tmpFolder + "/Tabs"
-    fs.mkdirSync(pathTempTabs);
-    fs.copySync(NBPanel.tabsPath + "/" + inTabID, pathTempTabs + "/00000000")
- 
-
-    var pathTempEntries = tmpFolder + "/Entries"
-	fs.mkdirSync(pathTempEntries);
-
-
-
-	var brushIDs = NBPanel.tabs.tab(inTabID).getBrushIDs()
-	for (var i = 0; i < brushIDs.length; i++)
-	{
-		var newEntryID = getEntryInc(pathTempEntries)
-		var savePath = pathTempEntries+"/" + newEntryID
-		fs.mkdirSync(savePath);		
-
-		var entryPath = NBPanel.entriesPath + brushIDs[i];
-		fs.copySync(entryPath, savePath)
-	}
-
-	var sourcePath = tmpFolder
- 	var destPath = currentFile+"/" + "NBTAB_" + NBPanel.tabs.tab(inTabID).name + ".zip"
-	zipper.zip(sourcePath, function(error, zipped)
-	{
-		if (error)
-		{alert("Error compressing file.");fs.removeSync(tmpFolder); return;}
-
-        zipped.compress(); 		 
-        zipped.save(destPath, function(error)
-        {
-        	fs.removeSync(tmpFolder);
-        	if (error)
-			{alert("Error saving file.");return;}
-    		closeModal()
-        });
-	});
-
-	return;
-}
-
-function importZip(inPath)
-{
-	var tmpFolder = NBPanel.dataPath + "temp/unzip"
-	fs.removeSync(tmpFolder);
-	fs.mkdirSync(tmpFolder);
-
-	zipper.sync.unzip(inPath).save(tmpFolder)
-
-	var ManifestFilename = "NB_Manifest.json"
-
-	try
-	{
-		curManifest = JSON.parse(fs.readFileSync(tmpFolder+"/"+ManifestFilename, 'utf8'));
-	}
-	catch(e)
-	{
-		fs.removeSync(tmpFolder);
-		return;
-	}
-
-	switch(curManifest.type)
-	{
-		case "SINGLEBRUSH":
-			importSingleEntry(tmpFolder)
-			break;
-
-		case "SINGLETAB":
-			importSingleTab(tmpFolder)
-			break;
-
-		default:
-			alert("Manifest Error");
-	}
-}
-
-function importSingleEntry(inPath_Temp)
-{
-	openModal("Processing...")
-
-	var newEntryID = getEntryInc(NBPanel.entriesPath)
-	var curPath = NBPanel.entriesPath + "/" + newEntryID
-	fs.mkdirSync(curPath);
-	fs.copySync(inPath_Temp+"/Entries/00000000", curPath)
-
-	NBPanel.tabs.tabCurrent().listTab.data.brushes.push(newEntryID)
-	NBPanel.tabs.tabCurrent().writeFile()
-	NBPanel.tabs.tabCurrent().appendBrush(newEntryID)
-	NBPanel.brushes.brush(newEntryID).saveFile()
-	fs.removeSync(NBPanel.tempPath + "/unzip");
-	closeModal()
-}
-
-function importSingleTab(inPath_Temp)
-{
-	openModal("Processing...")
-
-	var curEntries = fs.readdirSync(inPath_Temp + "/Entries")
-    var newIDs = []
-
-    for (var i = 0; i < curEntries.length;i++)
-    {
-        var newEntryID = getEntryInc(NBPanel.entriesPath)
-        newIDs.push(newEntryID)
-    	fs.copySync(inPath_Temp + "/Entries/" + curEntries[i], NBPanel.entriesPath + "/" + newEntryID)
-    }
-	var tabName = JSON.parse(fs.readFileSync(inPath_Temp+ "/Tabs/00000000", 'utf8')).name
-	NBPanel.tabs.appendTab(tabName, false)
-
-	for (var i = 0; i < newIDs.length; i++)
-	{
-		NBPanel.tabs.tabCurrent().listTab.data.brushes.push(newIDs[i])
-		NBPanel.tabs.tabCurrent().appendBrush(newIDs[i])
-		NBPanel.brushes.brush(newIDs[i]).saveFile()			
-	}
-	NBPanel.tabs.tabCurrent().writeFile()
-
-	closeModal()
-}
-
-function AddCurrentTool()
-{
-	openModal("Processing...")
-
-	//TODO: Need to ensure we are using correct tool type.
-	var dataJSX = {pathEntries:NBPanel.entriesPath, pathTemp:NBPanel.tempPath}
-	var command = "createEntryFromExisting"
-	JSONtoJSX(command, dataJSX, callbackCreateEntries)
-}
-
-
-
-
-callbackCreateEntries = function(retVal)
+appendEntryIDs = function(retVal)
 {
 	var curTab = NBPanel.tabs.tabList[NBPanel.tabs.activeTab]
 
@@ -465,26 +226,351 @@ callbackCreateEntries = function(retVal)
 
 	NBPanel.tabs.tabCurrent().writeFile()		
 	NBPanel.brushes.updateLook()
-	closeModal()
+	Modal_Loading.close()
 }
-
-
-
-
-
-
-
-
-
-
 
 
 function SnowBrushPanel()
 {
-	this.dataPath = csInterface.getSystemPath(SystemPath.MY_DOCUMENTS) + "/SnowBrush/";
-	this.tabsPath = this.dataPath + "Tabs/"
-	this.tempPath = this.dataPath + "Temp/"
-	this.entriesPath = this.dataPath + "Entries/"
+
+	this.brushButton =
+	{
+		ShortThumbSize: {width:64, height:64},
+		LongThumbSize: {width:256, height:64},
+		Margin: {width:2, height:64},
+		DefaultColor: {red:48, green:48, blue:48},
+		DefaultColorH: "#303030",
+
+	}
+
+	this.event = 
+	{
+		sliderChanged:function()
+		{
+			NBPanel.settings.values.scaleSlider = document.getElementById("sizeSlider").value;
+			NBPanel.settings.write()		
+		},
+
+		sliderChanging:function()
+		{
+			NBPanel.brushes.updateLook()
+		},
+
+		updateBrush:function(inSliderValue)
+		{
+			var scale = inSliderValue / NBPanel.brushButton.ShortThumbSize.height;
+			var ShortThumb = NBPanel.brushButton.ShortThumbSize
+			var LongThumb = NBPanel.brushButton.LongThumbSize
+			var Margin = NBPanel.brushButton.Margin
+
+			var showLong = NBPanel.settings.values.showLongThumb
+			var showShort = NBPanel.settings.values.showShortThumb
+			var showText = NBPanel.settings.values.showText
+
+			var ThumbButton = this.button.childNodes[0];
+			var TextButton = this.button.childNodes[1];
+			
+			TextButton.childNodes[1].style.width = TextButton.clientWidth - 40 + "px"	
+			TextButton.style.width = scale * (showShort * ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
+			TextButton.style.display = showText ? "block" : "none"
+	
+			ThumbButton.style.height = scale * ShortThumb.height + "px";
+			ThumbButton.style.width = scale * (showShort*ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
+			ThumbButton.style.backgroundSize = scale *showShort*ShortThumb.width + "px "+ scale * showShort *ShortThumb.height+"px," + showLong*LongThumb.width * scale + "px, " + showLong*LongThumb.height + "px";
+
+
+			var BG = TextButton.childNodes[0].childNodes[1].style
+			var FG = TextButton.childNodes[0].childNodes[0].style
+
+			if (NBPanel.settings.values.useColor)
+			{
+				var brushData = this.data
+
+				if (brushData.colorBG == undefined)
+				brushData.colorBG = NBPanel.brushButton.DefaultColor;
+				if (brushData.colorFG == undefined)
+				brushData.colorFG = NBPanel.brushButton.DefaultColor;
+
+				BG.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"
+				FG.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"		
+			}
+			else
+			{
+				BG.backgroundColor = NBPanel.brushButton.DefaultColorH;
+				FG.backgroundColor = NBPanel.brushButton.DefaultColorH;		
+			}		
+		},
+
+		resizeDoc:function()
+		{
+			var containerBar = document.getElementById("ContainerBar")
+
+			var nodes = Array.prototype.slice.call( containerBar.parentElement.children );
+
+			var curElement = nodes.indexOf( containerBar );
+			var heightOffest = 0
+			for (var i = 0; i < nodes.indexOf( containerBar ); i++)
+			{
+				heightOffest += containerBar.parentElement.children[i].offsetHeight
+			}
+
+			//Make sure ContainerBar fills the same area as tab bar pushes it down.
+			containerBar.style.top=heightOffest+"px"
+			containerBar.style.height = document.body.scrollHeight + 24 - heightOffest + "px"
+		},
+	}
+
+
+	this.path =
+	{
+		data: 		path.joinU(csInterface.getSystemPath(SystemPath.MY_DOCUMENTS), "SnowBrush" ),
+		tabs: 		path.joinU(csInterface.getSystemPath(SystemPath.MY_DOCUMENTS), "SnowBrush", "Tabs" ),
+		entries: 	path.joinU(csInterface.getSystemPath(SystemPath.MY_DOCUMENTS), "SnowBrush", "Entries" ),
+		temp: 		path.joinU(csInterface.getSystemPath(SystemPath.MY_DOCUMENTS), "SnowBrush", "Temp" )
+	}
+
+	this.import =
+	{
+		dropped: function(event)
+		{
+			event.dataTransfer.items[0].getAsString(function(s)
+			{
+				data = JSON.parse(s);
+
+				if (data.assetList[0].type == "brush")
+				{
+					Modal_Loading.open("Processing...")
+					brushID = data.assetList[0].data[0]
+					brushName = data.assetList[0].name
+
+					var dataJSX = {pathEntries:NBPanel.path.entries, pathTemp:NBPanel.path.temp, brushID:brushID, brushName:brushName}
+					JSONtoJSX("createEntryFromExisting", dataJSX, appendEntryIDs)
+				}
+			})
+		},
+
+		currentTool: function()
+		{
+			Modal_Loading.open("Processing...")
+
+			//TODO: Need to ensure we are using correct tool type.
+			var dataJSX = {pathEntries:NBPanel.path.entries, pathTemp:NBPanel.path.temp}
+			JSONtoJSX("createEntryFromExisting", dataJSX, appendEntryIDs)			
+		},
+
+		file:function()// AddFromFile()
+		{
+			var curFile = window.cep.fs.showOpenDialogEx(false,false,"Brush File:", "%USERPROFILE%/Desktop",["abr","tpl","zip"], "Brush Files").data;
+			if (curFile == "") return;
+			curFile = curFile[0];
+
+			Modal_Loading.open("Processing...")
+
+			var dataJSX = {pathSource:curFile, pathEntries:NBPanel.path.entries, pathTemp:NBPanel.path.temp}
+
+			var curExtension = path.parse(curFile).ext.toLowerCase()
+			switch(curExtension)
+			{
+				case ".abr":
+					command = 
+					JSONtoJSX("entriesFromABR", dataJSX, appendEntryIDs)
+					break;
+				case ".tpl":
+					JSONtoJSX("entriesFromTPL", dataJSX, appendEntryIDs)
+					break;
+				case ".zip":
+					this.zip(curFile);
+					break;
+				default:
+					alert("Error importing file!")
+					break;
+			}	
+		},
+
+		zip: function(inPath)
+		{
+			var tmpFolder = path.joinU(NBPanel.path.data, "temp/unzip")
+			fs.emptyDirSync(tmpFolder);
+
+			zipper.sync.unzip(inPath).save(tmpFolder)
+
+			try
+			{
+				var pathManifest = path.joinU(tmpFolder, "NB_Manifest.json")
+				curManifest = fs.readJsonSync(pathManifest)
+			}
+			catch(e)
+			{
+				fs.emptyDirSync(tmpFolder);
+				return;
+			}
+
+			switch(curManifest.type)
+			{
+				case "SINGLEBRUSH":
+					NBPanel.import.entry(tmpFolder)
+					break;
+
+				case "SINGLETAB":
+					NBPanel.import.tab(tmpFolder)
+					break;
+
+				default:
+					alert("Manifest Error");
+			}
+		},
+
+		entry: function(inPath_Temp)
+		{
+			Modal_Loading.open("Processing...")
+
+			var newEntryID = getEntryInc(NBPanel.path.entries)
+
+			var pathSource = path.joinU (inPath_Temp,"/Entries/00000000")
+			var pathDest = path.joinU(NBPanel.path.entries, newEntryID)
+			
+			fs.mkdirSync(pathDest);
+			fs.copySync(pathSource, pathDest)
+			fs.emptyDirSync(NBPanel.path.temp + "/unzip");		
+
+			appendEntryIDs([newEntryID])
+		},
+
+		tab:function(inPath_Temp)
+		{
+			Modal_Loading.open("Processing...")
+
+			var pathSource = path.joinU(inPath_Temp, "/Entries")
+			var curEntries = fs.readdirSync(pathSource)
+
+		    var newIDs = []
+		    for (var i = 0; i < curEntries.length; i++)
+		    {
+		        var newEntryID = getEntryInc(NBPanel.path.entries)
+		        newIDs.push(newEntryID)
+
+		        var pathEntrySource = path.joinU(inPath_Temp, "Entries", curEntries[i]);
+		        var pathEntryDest =  path.joinU(NBPanel.path.entries, newEntryID)
+		    	fs.copySync(pathEntrySource, pathEntryDest)
+		    }
+
+		    var pathTab = path.joinU(inPath_Temp, "/Tabs/00000000")
+		    var tabName = fs.readJsonSync(pathTab).name
+			NBPanel.tabs.appendTab(tabName, false)
+
+			appendEntryIDs(newIDs)
+		},
+
+	}
+
+
+	this.export =
+	{
+		brush:function(inBrushID) // Exports a single brush
+		{
+			var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Export Location:", null,null, "EXPORT HERE").data;
+			if (currentFile == "" ) {return;}
+			currentFile = currentFile[0]
+
+			Modal_Loading.open("Processing...")
+
+			var tmpFolder = path.joinU(NBPanel.path.temp,"zip")
+			fs.emptyDirSync(tmpFolder);
+			
+		    var manifestFile = path.joinU(tmpFolder,"/NB_Manifest.json")
+		    var manifestData = {name:"NB_Manifest", version:"0002", type:"SINGLEBRUSH"}
+			fs.outputJsonSync(manifestFile, manifestData)
+
+		    var pathTempEntries = path.joinU(tmpFolder,"Entries")
+			fs.mkdirSync(pathTempEntries);
+
+			var newEntryID = getEntryInc(pathTempEntries)
+			var savePath = path.joinU(pathTempEntries,newEntryID)
+			fs.mkdirSync(savePath);
+
+			var entryPath = path.joinU(NBPanel.path.entries,inBrushID);
+			fs.copySync(entryPath, savePath)
+
+		 	var inBrushName = NBPanel.brushes.brush(inBrushID).tabEntry.data.name
+		 	var destPath = path.joinU(currentFile,"NBBRUSH_" + inBrushName + ".zip")
+
+			zipper.zip(tmpFolder, function(error, zipped)
+			{
+				if (error)
+				{alert("Error compressing file.");fs.removeSync(tmpFolder); return;}
+
+		        zipped.compress(); 		 
+		        zipped.save(destPath, function(error)
+		        {
+		        	fs.removeSync(tmpFolder);
+		        	if (error)
+					{alert("Error saving file.");return;}
+		    		Modal_Loading.close()
+		        });
+			});
+		},
+
+
+		tab: function(inTabID)
+		{
+			var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Export Location:", null,null, "EXPORT HERE").data;
+			if (currentFile == "" ) {Modal_Loading.close(); return;}
+			currentFile = currentFile[0]
+
+			Modal_Loading.open("Processing...")
+
+			//Create temp zip folder
+			var tmpFolder = path.joinU (NBPanel.path.temp, "zip")
+			fs.emptyDirSync(tmpFolder);
+
+			//Create manifest file
+		    var manifestFile = path.joinU(tmpFolder ,"/NB_Manifest.json")
+		    var manifestData = {name:"NB_Manifest", version:"0002", type:"SINGLETAB"}
+		    fs.outputJsonSync(manifestFile,manifestData)
+
+			//Copy tab data
+		    var pathTempTabs = path.joinU(tmpFolder, "/Tabs")
+		    fs.mkdirSync(pathTempTabs);
+		    var pathTabSource = path.joinU(NBPanel.path.tabs, inTabID)
+		    var pathTabDest = path.joinU(pathTempTabs, "00000000")
+		    fs.copySync(pathTabSource, pathTabDest)
+
+		    var pathTempEntries = path.joinU(tmpFolder,"Entries");
+			fs.mkdirSync(pathTempEntries);
+
+
+			var brushIDs = NBPanel.tabs.tab(inTabID).getBrushIDs()
+			for (var i = 0; i < brushIDs.length; i++)
+			{
+				var newEntryID = getEntryInc(pathTempEntries);
+				var savePath = path.joinU (pathTempEntries, newEntryID);
+				fs.mkdirSync(savePath);		
+
+				var entryPath = path.joinU (NBPanel.path.entries, brushIDs[i]);
+				fs.copySync(entryPath, savePath)
+			}
+
+			var sourcePath = tmpFolder;
+		 	var destPath = path.joinU(currentFile, "NBTAB_" + NBPanel.tabs.tab(inTabID).name + ".zip");
+			zipper.zip(sourcePath, function(error, zipped)
+			{
+				if (error)
+				{alert("Error compressing file.");fs.emptyDirSync(tmpFolder); return;}
+
+		        zipped.compress(); 		 
+		        zipped.save(destPath, function(error)
+		        {
+		        	fs.removeSync(tmpFolder);
+		        	if (error)
+					{alert("Error saving file.");return;}
+		    		Modal_Loading.close()
+		        });
+			});
+
+			return;
+		},
+	}
+
 
 
 	//TODO: make sure recent brush button is removed when brush is removed.
@@ -513,8 +599,8 @@ function SnowBrushPanel()
 			btn.className = "recentBrushButton"
 			btn.style.borderRadius = "0px"
 			btn.value = inBrushPath
-			var squareThumb = "url("+ encodeURI(path.joinU(inBrushPath,"ThumbShort.png"))+"?" + new Date().getTime()  + ")"
-			btn.style.backgroundImage = squareThumb
+			var thumbShort = "url("+ encodeURI(path.joinU(inBrushPath,"ThumbShort.png"))+"?" + new Date().getTime()  + ")"
+			btn.style.backgroundImage = thumbShort
 				btn.style.backgroundSize = "22px 22px"
 			btn.onclick = function(){eval(this.dataset.script)}
 
@@ -583,43 +669,31 @@ function SnowBrushPanel()
 			}
 		},
 
-		populate:function()
+		clearResults:function()
 		{
-
-			//clear previous
 			while (this.brushGroup.firstChild) 
 			{
     			this.brushGroup.removeChild(this.brushGroup.firstChild);
-			}
+			}		
+		},
 
+		populate:function()
+		{
+			this.clearResults();
 			var searchString = this.textElement.value.toLowerCase()
+			var searchRange = this.searchAll ? NBPanel.brushes.getAll() : NBPanel.brushes.getCurrent();
 
-			if (this.searchAll) // Search all tabs
+			var result = searchRange.filter(function(brush)
 			{
-				for (var i = 0; i < NBPanel.tabs.tabList.length; i++)
-				{
-					for (var j = 0; j < NBPanel.tabs.tabList[i].brushes.length; j++)
-					{
-						if (NBPanel.tabs.tabList[i].brushes[j].data.name.toLowerCase().indexOf(searchString) == -1) continue;
-						var copyButton = $(NBPanel.tabs.tabList[i].brushes[j].button).clone(true,true)[0]
+				return brush.data.name.toLowerCase().indexOf(searchString) != -1
+			})
 
-						copyButton.firstChild.onclick = NBPanel.tabs.tabList[i].brushes[j].button.firstChild.onclick
-						this.brushGroup.appendChild(copyButton);
-					}
-				}				
-			}
-			else //Search current tab
+			for (var i = 0; i < result.length; i++)
 			{
-				var i = NBPanel.tabs.activeTab;
-				for (var j = 0; j < NBPanel.tabs.tabList[i].brushes.length; j++)
-				{
-					if (NBPanel.tabs.tabList[i].brushes[j].data.name.toLowerCase().indexOf(searchString) == -1) continue;
-					var copyButton = $(NBPanel.tabs.tabList[i].brushes[j].button).clone(true,true)[0]
-
-					copyButton.firstChild.onclick = NBPanel.tabs.tabList[i].brushes[j].button.firstChild.onclick
-					this.brushGroup.appendChild(copyButton);
-				}
-			}
+				var copyButton = $(result[i].button).clone(true,true)[0]
+				copyButton.firstChild.onclick = result[i].button.firstChild.onclick
+				this.brushGroup.appendChild(copyButton);
+			}			
 		},
 
 		init:function()
@@ -736,6 +810,23 @@ function SnowBrushPanel()
 	{
 		activeBrush:null,
 
+		getAll: function()
+		{
+			var brushList = []
+			for (var i = 0; i <  NBPanel.tabs.tabList.length; i++)
+			{
+				brushList.push.apply(brushList, NBPanel.tabs.tabList[i].brushes);
+			}	
+
+			brushList.push.apply(brushList, NBPanel.sharedTab.brushList);
+			return brushList;
+		},
+
+		getCurrent: function()
+		{
+			return NBPanel.tabs.tabList[NBPanel.tabs.activeTab].brushes;
+		},
+
 		setBrushColor:function(inBrush, isFG)
 		{
 			if (!NBPanel.settings.values.useColor) return;
@@ -795,7 +886,7 @@ function SnowBrushPanel()
 
 				saveFile:function()
 				{
-					fs.writeFileSync( NBPanel.entriesPath + "/" + this.id + "/" + "Entry.json", JSON.stringify(this.tabEntry.data));			
+					fs.writeFileSync( NBPanel.path.entries + "/" + this.id + "/" + "Entry.json", JSON.stringify(this.tabEntry.data));			
 				},
 
 				setColorBG:function()
@@ -827,11 +918,12 @@ function SnowBrushPanel()
 
 				copyToShared:function()
 				{
-					openModal("Processing...")
+					Modal_Loading.open("Processing...")
 					NBPanel.sharedTab.appendBrush(this)
+
 					setTimeout(function()
 					{
-						closeModal();
+						Modal_Loading.close();
 					}, 250); 
 				},
 
@@ -839,7 +931,7 @@ function SnowBrushPanel()
 				{
 					var BPreset = "SB_Entry:" + this.id
 
-					fs.remove(NBPanel.entriesPath+"/"+this.id)													//delete brush entry folder
+					fs.remove(NBPanel.path.entries+"/"+this.id)													//delete brush entry folder
 					csInterface.evalScript("ToolPresets.removePresetByName('"+BPreset+"')");					//delete brush preset
 					removeElement(this.element)																	//remove brush html element
 					NBPanel.tabs.tabList[this.tabIndex].brushes.splice(this.brushIndex, 1)						//remove brush from tab list
@@ -856,8 +948,6 @@ function SnowBrushPanel()
 		createBrushButtonShared:function(inPath, inID)
 		{
 			var brushData = JSON.parse(fs.readFileSync(inPath+"/Entry.json", 'utf8'))
-
-
 			var inName = inID;
 			var inDisplayName = brushData.name;
 		    var btnGrp = document.createElement("div");
@@ -883,10 +973,10 @@ function SnowBrushPanel()
 
 
 
-			var squareThumb = "url("+ encodeURI(inPath+"/ThumbShort.png")+"?" + new Date().getTime()  + ")"
-			var longThumb = "url("+ encodeURI(inPath+"/ThumbLong.png")+"?" + new Date().getTime()  + ")"
+			var thumbShort = "url("+ encodeURI(inPath+"/ThumbShort.png")+"?" + new Date().getTime()  + ")"
+			var thumbLong = "url("+ encodeURI(inPath+"/ThumbLong.png")+"?" + new Date().getTime()  + ")"
 			btn.style.width = "322px"
-			btn.style.backgroundImage = squareThumb +"," + longThumb
+			btn.style.backgroundImage = thumbShort +"," + thumbLong
 			btn.style.backgroundPosition = "left top, right top"
 			btn.style.backgroundSize = "64px 64px, 256px 64px "
 			btn.style.backgroundRepeat = "no-repeat, no-repeat"
@@ -994,147 +1084,52 @@ function SnowBrushPanel()
 			btnGrp.id = "Shared_brs_" + inName
 			btnGrp.ondragover =  function(event){brushDragOver(event)}
 			btnGrp.ondragend = function(event){brushSharedDragEnd(event)}
+			
 			return btnGrp;
 		},
 
 		createBrushButton:function(inBrushID)
 		{
+			var brushDataPath = path.joinU (NBPanel.path.entries, inBrushID ,"Entry.json")
+			var brushData =	fs.readJsonSync(brushDataPath)
 
-			var brushData = JSON.parse(fs.readFileSync(NBPanel.entriesPath+"/"+inBrushID+"/Entry.json", 'utf8'))
+	
 
-			var stringFG = "JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorFG)"
-			var stringBG ="JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorBG)"
-			var stringPath = NBPanel.entriesPath+"/"+inBrushID+"/Entry.abr"
-
-
-
-
-			var inName = inBrushID;
-			var inDisplayName = brushData.name;
+			//Group for the whole brush
 		    var btnGrp = document.createElement("div");
 		    btnGrp.draggable = "true"
 			btnGrp.className = "BrushHolder"
-
-
-
-
-
-
+			btnGrp.draggable = "true"
+			btnGrp.ondragstart = function(event){brushDrag(event)}
+			btnGrp.id = "brs_" + inBrushID
+			btnGrp.ondragover =  function(event){brushDragOver(event)}
+			btnGrp.ondragend = function(event){brushDragEnd(event)}
 
 
 			var btn = document.createElement("BUTTON");
-			btn.dataset.script = "setEntryPath('" + stringPath + "'," + stringFG + "," + stringBG + ");"  + 	"NBPanel.recentBrushes.add('" + stringPath + "')";
+			btnGrp.appendChild(btn);
 			btn.className = "BrushButton"
-			btn.value = inName
+
+			var stringFG = "JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorFG)"
+			var stringBG ="JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorBG)"
+			var stringPath = path.joinU (NBPanel.path.entries, inBrushID, "Entry.abr")			
+
+			btn.value = inBrushID
+			btn.dataset.script = "setEntryPath('" + stringPath + "'," + stringFG + "," + stringBG + ");" +	"NBPanel.recentBrushes.add('" + stringPath + "')";
 			btn.onclick = function(){eval(this.dataset.script)}
 			btn.oncontextmenu = function(event){event.stopPropagation(); contextBrush(this.value)}
-			btnGrp.appendChild(btn);
 
-
-			
-
-
-
-			var squareThumb = "url("+ encodeURI(NBPanel.entriesPath+"/"+inBrushID+"/ThumbShort.png")+"?" + new Date().getTime()  + ")"
-			var longThumb = "url("+ encodeURI(NBPanel.entriesPath+"/"+inBrushID+"/ThumbLong.png")+"?" + new Date().getTime()  + ")"
-			btn.style.width = "322px"
-			btn.style.backgroundImage = squareThumb +"," + longThumb
-			btn.style.backgroundPosition = "left top, right top"
-			btn.style.backgroundSize = "64px 64px, 256px 64px "
-			btn.style.backgroundRepeat = "no-repeat, no-repeat"
-
-
-
-
-
-			//Button Name text
-			var btn_Edit = document.createElement("input");
-			btn_Edit.type = "text"
-			btn_Edit.spellcheck="false"
-			btn_Edit.value = inDisplayName
-			btn_Edit.className = "editTab"
-			btn_Edit.id = "btn_Edit_" + inName
-			btn_Edit.disabled = "disabled"
-
-			btn_Edit.onkeydown = function(event)
-			{
-				switch(event.keyCode)
-				{
-					case 13: //Enter
-						this.disabled = "disabled"
-						this.dataset.oldvalue = this.value
-
-						var curID = this.id.substring(9)
-						var curBrush = NBPanel.brushes.brush(curID);
-						curBrush.tabEntry.data.name = this.value
-						curBrush.saveFile();
-						break;
-
-					case 27: //Esc
-						this.disabled = "disabled"
-						this.value = this.dataset.oldvalue
-						break;
-				}
-
-			}
-
-			btn_Edit.onblur = function()
-			{
-				this.disabled = "disabled"
-				this.value = this.dataset.oldvalue
-			}
-
-
+			var thumbShort = "url("+ encodeURI(path.joinU(NBPanel.path.entries, inBrushID, "ThumbShort.png"))+"?" + new Date().getTime()  + ")"
+			var thumbLong = "url("+ encodeURI(path.joinU(NBPanel.path.entries, inBrushID, "ThumbLong.png"))+"?" + new Date().getTime()  + ")"
+			btn.style.backgroundImage = thumbShort + "," + thumbLong;
 
 
 
 			//Text lable group
 			var textLabel = document.createElement("div");
+			btnGrp.appendChild(textLabel);
+
 			textLabel.className = "textLabel"
-
-
-
-
-
-			// Color buttons
-			var colorsGroup = document.createElement("span")
-			textLabel.appendChild(colorsGroup)
-			colorsGroup.style.marginRight = "10px"
-			var colorDefault = "#444444"
-
-			var colorL = document.createElement("button")
-			colorL.className = "ColorDotLeft"
-			colorL.onclick = function()
-			{
-				var curBrush = NBPanel.brushes.brush(inBrushID).setColorFG()
-			}
-			if (brushData.colorFG == null)
-			{colorL.style.backgroundColor = colorDefault}
-			else
-			{colorL.style.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"}
-			colorsGroup.appendChild(colorL)
-
-
-
-			var colorR = document.createElement("button")
-			colorR.className = "ColorDotRight"
-			colorR.style.backgroundColor = "rgb("+ Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) +")"
-			colorR.onclick = function()
-			{
-				var curBrush = NBPanel.brushes.brush(inBrushID).setColorBG()
-			}
-			if (brushData.colorBG == null)
-			{colorR.style.backgroundColor = colorDefault}
-			else
-			{colorR.style.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"}
-			colorsGroup.appendChild(colorR)
-
-
-
-
-
-			textLabel.appendChild(btn_Edit)
-
 			textLabel.ondblclick = function()
 			{
 				this.childNodes[1].disabled = ""
@@ -1142,16 +1137,77 @@ function SnowBrushPanel()
 				this.childNodes[1].focus()
 			}
 
+				// Color buttons
+				var colorsGroup = document.createElement("span")
+				textLabel.appendChild(colorsGroup)
+				colorsGroup.style.marginRight = "10px"
+				var colorDefault = "#444444"
+
+				var colorL = document.createElement("button")
+				colorL.className = "ColorDotLeft"
+				colorL.onclick = function()
+				{
+					var curBrush = NBPanel.brushes.brush(inBrushID).setColorFG()
+				}
+				if (brushData.colorFG == null)
+				{colorL.style.backgroundColor = colorDefault}
+				else
+				{colorL.style.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"}
+				colorsGroup.appendChild(colorL)
+
+				var colorR = document.createElement("button")
+				colorR.className = "ColorDotRight"
+				colorR.style.backgroundColor = "rgb("+ Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) +")"
+				colorR.onclick = function()
+				{
+					var curBrush = NBPanel.brushes.brush(inBrushID).setColorBG()
+				}
+				if (brushData.colorBG == null)
+				{colorR.style.backgroundColor = colorDefault}
+				else
+				{colorR.style.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"}
+				colorsGroup.appendChild(colorR)
 
 
+			//Button Name text
+				var btn_Edit = document.createElement("input");
+				textLabel.appendChild(btn_Edit)
+				btn_Edit.type = "text"
+				btn_Edit.spellcheck="false"
+				btn_Edit.className = "editTab"
+				btn_Edit.disabled = "disabled"
 
-			btnGrp.appendChild(textLabel);
+				btn_Edit.id = "btn_Edit_" + inBrushID
+				btn_Edit.value = brushData.name
 
-			btnGrp.draggable = "true"
-			btnGrp.ondragstart = function(event){brushDrag(event)}
-			btnGrp.id = "brs_" + inName
-			btnGrp.ondragover =  function(event){brushDragOver(event)}
-			btnGrp.ondragend = function(event){brushDragEnd(event)}
+				btn_Edit.onblur = function()
+				{
+					this.disabled = "disabled"
+					this.value = this.dataset.oldvalue
+				}
+
+				btn_Edit.onkeydown = function(event)
+				{
+					switch(event.keyCode)
+					{
+						case 13: //Enter
+							this.disabled = "disabled"
+							this.dataset.oldvalue = this.value
+
+							var curID = this.id.substring(9)
+							var curBrush = NBPanel.brushes.brush(curID);
+							curBrush.tabEntry.data.name = this.value
+							curBrush.saveFile();
+							break;
+
+						case 27: //Esc
+							this.onblur();
+							break;
+					}
+
+				}
+
+		
 			return btnGrp;
 		},
 
@@ -1194,12 +1250,15 @@ function SnowBrushPanel()
 		{
 			var currentFile = window.cep.fs.showOpenDialogEx(false, true,"Share Location:", null,null, "Open Share Path").data;
 			if (currentFile == null || currentFile == "") return;
+			currentFile = currentFile[0];
 
-			fs.unwatchFile(NBPanel.settings.values.shareLocation + "/manifest.json")
+
+
+			fs.unwatchFile(path.joinU(NBPanel.settings.values.shareLocation,"manifest.json"))
 			NBPanel.settings.values.shareLocation = currentFile;
 			NBPanel.settings.write();
 
-			fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
+			fs.watchFile(path.joinU(NBPanel.settings.values.shareLocation,"manifest.json"),{persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
 			NBPanel.sharedTab.onFolderChange()
 		},
 
@@ -1239,11 +1298,11 @@ function SnowBrushPanel()
 
 				copyToTab:function (inTab)
 				{
-					openModal("Processing...")
+					Modal_Loading.open("Processing...")
 
-					var newEntryID = getEntryInc(NBPanel.entriesPath)
+					var newEntryID = getEntryInc(NBPanel.path.entries)
 
-					var curPath = NBPanel.entriesPath + "/" + newEntryID
+					var curPath = NBPanel.path.entries + "/" + newEntryID
 					fs.mkdirSync(curPath);
 					fs.copySync(NBPanel.settings.values.shareLocation + "/entries/" + this.id, curPath)
 
@@ -1255,7 +1314,7 @@ function SnowBrushPanel()
 
 					setTimeout(function()
 					{
-						closeModal();
+						Modal_Loading.close();
 					}, 250); 
 				},
 			}
@@ -1293,36 +1352,16 @@ function SnowBrushPanel()
 			this.loadEntries();
 
 
-
-			fs.watchFile(NBPanel.settings.values.shareLocation + "/manifest.json",{persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
-		},
-
-		loadEntriesNoManifest:function()
-		{
-			var shareLocation = NBPanel.settings.values.shareLocation
-			try
-			{
-				var fileList = fs.readdirSync(shareLocation+ "/entries")
-			}
-			catch(e)
-			{
-				return // No entries found
-			}
-
-
-			for (var i = 0; i < fileList.length; i++)
-			{
-				NBPanel.sharedTab.createBrush(fileList[i])
-			}
+			var pathSource = path.joinU (NBPanel.settings.values.shareLocation, "manifest.json")
+			fs.watchFile(pathSource, {persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
 		},
 
 		loadEntries:function()
 		{
-			var shareLocation = NBPanel.settings.values.shareLocation
+			var pathSource = path.joinU (NBPanel.settings.values.shareLocation, "manifest.json")
 			try
 			{
-				var brushList = JSON.parse(fs.readFileSync(shareLocation+ "/manifest.json")).brushes
-
+				var brushList = fs.readJsonSync(pathSource).brushes
 			}
 			catch(e)
 			{
@@ -1332,7 +1371,8 @@ function SnowBrushPanel()
 			for (var i = 0; i < brushList.length; i++)
 			{
 				NBPanel.sharedTab.createBrush(brushList[i])
-			}			
+			}	
+
 		},
 
 		refresh:function()
@@ -1351,23 +1391,27 @@ function SnowBrushPanel()
 
 		createBrush:function(inID)
 		{
-			var shareLocation = NBPanel.settings.values.shareLocation
-			var brushData = JSON.parse(fs.readFileSync(shareLocation+"/entries/"+inID+"/Entry.json", 'utf8'))		
+			var pathSource = path.joinU (NBPanel.settings.values.shareLocation, "Entries", inID)
+			var pathEntry = path.joinU(pathSource, "Entry.json")
+			var brushData = fs.readJsonSync(pathEntry)	
 
-			var newButton = NBPanel.brushes.createBrushButtonShared(shareLocation+"/entries/"+inID, inID)
+			var newButton = NBPanel.brushes.createBrushButtonShared(pathSource, inID)
 			NBPanel.sharedTab.tabBody.appendChild(newButton)
+	
 
-			var curBrushData = {id: inID, button:newButton, update:updateLook, data:brushData}
+			var curBrushData = {id: inID, button:newButton, update:NBPanel.event.updateBrush, data:brushData}
 			NBPanel.sharedTab.brushList.push(curBrushData)				
 		},
 
 		appendBrush:function(inBrush)
 		{
-			var shareLoc = NBPanel.settings.values.shareLocation + "/Entries/"
-			fs.ensureDirSync(shareLoc);
-			var newID =  getEntryInc(shareLoc)
+			var pathDest = path.joinU(NBPanel.settings.values.shareLocation, "Entries")
+			fs.ensureDirSync(pathDest);
+			var pathSource = path.joinU (NBPanel.path.entries, inBrush.id)
+
+			var newID =  getEntryInc(pathDest)
 				
-			fs.copySync(NBPanel.entriesPath + "/" + inBrush.id, shareLoc + newID)
+			fs.copySync(pathSource, path.joinU(pathDest,newID))
 
 			NBPanel.sharedTab.createBrush(newID)
 
@@ -1393,8 +1437,9 @@ function SnowBrushPanel()
 			if (!fs.existsSync(NBPanel.settings.values.shareLocation + "/")) return;			
 
 			data = {brushes:this.getList()}
-			fs.outputFileSync(NBPanel.settings.values.shareLocation + "/manifest.json" , JSON.stringify(data));
-
+		
+			var pathDest = path.joinU(NBPanel.settings.values.shareLocation, "manifest.json")
+			fs.outputJsonSync(pathDest, data);
 		},
 		
 		setActive:function()
@@ -1445,12 +1490,12 @@ function SnowBrushPanel()
 			try
 			{
 
-				var tabData = JSON.parse(fs.readFileSync(NBPanel.dataPath + "/" +  this.tabListFile, 'utf8'));
+				var tabData = JSON.parse(fs.readFileSync(NBPanel.path.data + "/" +  this.tabListFile, 'utf8'));
 				this.activeTab = tabData.active;
 				
 				for(var i = 0; i < tabData.tabs.length; i++)
 				{
-					var curTabData =  JSON.parse( fs.readFileSync(NBPanel.tabsPath + "/" + tabData.tabs[i]) )
+					var curTabData =  JSON.parse( fs.readFileSync(NBPanel.path.tabs + "/" + tabData.tabs[i]) )
 					this.tabList.push({data:curTabData, brushes:[]})
 				}
 
@@ -1567,18 +1612,18 @@ function SnowBrushPanel()
 				tabData.tabs.push(this.tabList[i].data.id)
 			}	
 
-			fs.writeFileSync(NBPanel.dataPath + "/" +  this.tabListFile, JSON.stringify(tabData))
+			fs.writeFileSync(NBPanel.path.data + "/" +  this.tabListFile, JSON.stringify(tabData))
 		},
 
 		appendTab:function(inName, inStartEdit)
 		{
 			inStartEdit = (inStartEdit == undefined) ? true : inStartEdit;
 
-			var newTab = getEntryInc(NBPanel.tabsPath)
+			var newTab = getEntryInc(NBPanel.path.tabs)
 
 			tabData = {id:newTab ,name:inName, brushes:[]}
 
-			fs.writeFileSync(NBPanel.tabsPath + newTab, JSON.stringify(tabData));
+			fs.writeFileSync(NBPanel.path.tabs + newTab, JSON.stringify(tabData));
 
 
 			var curTab = {data:tabData, brushes:[]}
@@ -1612,8 +1657,8 @@ function SnowBrushPanel()
 				appendBrush:function(inBrushID)
 				{
 					var newButton = NBPanel.brushes.createBrushButton(inBrushID)
-					var brushData = JSON.parse(fs.readFileSync(NBPanel.entriesPath+"/"+inBrushID+"/Entry.json", 'utf8'))				
-					this.listTab.brushes.push({data:brushData, id:inBrushID, button:newButton, update:updateLook})
+					var brushData = JSON.parse(fs.readFileSync(NBPanel.path.entries+"/"+inBrushID+"/Entry.json", 'utf8'))				
+					this.listTab.brushes.push({data:brushData, id:inBrushID, button:newButton, update:NBPanel.event.updateBrush})
 
 					this.listTab.brushGroup.appendChild(newButton)
 
@@ -1631,7 +1676,7 @@ function SnowBrushPanel()
 
 				writeFile:function()
 				{
-					fs.writeFileSync(NBPanel.tabsPath + "/" + this.id, JSON.stringify(this.listTab.data));
+					fs.writeFileSync(NBPanel.path.tabs + "/" + this.id, JSON.stringify(this.listTab.data));
 				},
 
 				rename:function(inName)
@@ -1706,7 +1751,7 @@ function SnowBrushPanel()
 
 						try
 						{
-							fs.removeSync(NBPanel.tabsPath + "/" + currentObj.id)	
+							fs.removeSync(NBPanel.path.tabs + "/" + currentObj.id)	
 						}
 						catch(e){alert(e)}
 						
@@ -1745,6 +1790,8 @@ function SnowBrushPanel()
 
 	this.settings =
 	{
+		file: "settings.json",
+
 		values:
 		{
 			useColor: false,
@@ -1805,13 +1852,16 @@ function SnowBrushPanel()
 
 		write: function ()
 		{
-			fs.writeFileSync(NBPanel.dataPath + "settings.json", JSON.stringify(this.values))			
+			var pathOut = path.joinU(NBPanel.path.data, NBPanel.settings.file)
+			fs.outputJsonSync(pathOut, this.values)			
 		},
 
 		read: function()
 		{
-			if (!fs.existsSync(NBPanel.dataPath + "/settings.json")) return;
-			var inValues = JSON.parse(fs.readFileSync(NBPanel.dataPath + "/settings.json",'utf8'));
+			var pathIn = path.joinU(NBPanel.path.data, NBPanel.settings.file)
+
+			if (!fs.existsSync(pathIn)) return;
+			var inValues = fs.readJsonSync(pathIn)
 
 			this.values.scaleSlider = inValues.scaleSlider;
 			this.values.persistent = inValues.persistent;
@@ -1908,12 +1958,13 @@ function SnowBrushPanel()
 		    // the event's "data" attribute is an object, which contains "menuId" and "menuName"
 		    switch (event.data.menuId)
 		    {
-    			case "aboutMenu":	
-					document.getElementById("modalAbout").style.display = "block";
+    			case "aboutMenu":
+
+					Modal_About.open();
     				break;
 
     			case "openMenu":
-					csInterface.evalScript("Folder('"+doubleDashes(NBPanel.dataPath)+"').execute();");
+    				require('child_process').exec('start "" "'+path.normalize(NBPanel.path.data)+'"');
     				break;
 		    			    	
 				case "persistentMenu":
@@ -1943,10 +1994,10 @@ function SnowBrushPanel()
 
 	this.initialize = function()
 	{
-		fs.ensureDirSync(this.dataPath)
-		fs.ensureDirSync(this.tabsPath)
-		fs.ensureDirSync(this.entriesPath)
-		fs.ensureDirSync(this.tempPath)
+		fs.ensureDirSync(NBPanel.path.data)
+		fs.ensureDirSync(NBPanel.path.tabs)
+		fs.ensureDirSync(NBPanel.path.entries)
+		fs.ensureDirSync(NBPanel.path.temp)
 
 		this.flyoutMenu.populate()
 		this.settings.read()
@@ -1957,16 +2008,44 @@ function SnowBrushPanel()
 		NBPanel.search.init();
 
 		NBPanel.brushes.updateLook()
-		onDocResize();
+		NBPanel.event.resizeDoc();
 	}
-
-
-
-
-
 }
 
 ////////////////////////////////////////////////////////// Brush Stuff
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////GENERAL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***********************HTML***************************************************************/
+
 
 function contextDefault()
 {
@@ -1975,7 +2054,6 @@ function contextDefault()
 
 function contextTab(inTabName)
 {
-
 	var contextJSON =
 	{
 		menu:
@@ -2002,7 +2080,7 @@ function contextTab(inTabName)
  	switch(res)
  	{
 		case "menuItemExportTab":
-			exportTab(inTabName)
+			NBPanel.export.tab(inTabName)
 			break;
  		case "menuItemRemove":
 			NBPanel.tabs.tab(inTabName).remove()
@@ -2041,7 +2119,7 @@ function contextSharedTab()
 			NBPanel.sharedTab.setPath();
 			break;
 		case "menuOpenPath":
-			csInterface.evalScript("Folder('"+NBPanel.settings.values.shareLocation+"').execute();");
+			require('child_process').exec('start "" "'+path.normalize(NBPanel.settings.values.shareLocation)+'"');
 			break;
  	}
 });
@@ -2049,6 +2127,7 @@ function contextSharedTab()
 
 function contextBrush(inBrushName)
 {
+
 	var tabsContext = []
 	var tabs = NBPanel.tabs.tabList
 
@@ -2056,7 +2135,6 @@ function contextBrush(inBrushName)
 	{
 		tabsContext.push ({id:"TAB_" + tabs[i].data.id, label:tabs[i].data.name})
 	}
-
 	var curBrush = NBPanel.brushes.brush(inBrushName)
 
 	var contextJSON =
@@ -2106,7 +2184,7 @@ function contextBrush(inBrushName)
  			break;
 
 		case "menuItemExport":
-			exportBrush(inBrushName)
+			NBPanel.export.brush(inBrushName)
 			break;
 
 		case "menuCopyToShared":
@@ -2184,24 +2262,7 @@ function contextSharedBrush(inBrushName)
 });
 }
 
-function onDrop(event)
-{
-	event.dataTransfer.items[0].getAsString(function(s)
-	{
-		data = JSON.parse(s);
 
-		if (data.assetList[0].type == "brush")
-		{
-			openModal("Processing...")
-			brushID = data.assetList[0].data[0]
-			brushName = data.assetList[0].name
-
-			var dataJSX = {pathEntries:NBPanel.entriesPath, pathTemp:NBPanel.tempPath, brushID:brushID, brushName:brushName}
-			var command = "createEntryFromExisting"
-			JSONtoJSX(command, dataJSX, callbackCreateEntries)
-		}
-	})
-}
 
 function tabOnKeydown(event)
 {
@@ -2367,12 +2428,12 @@ function tabOnDrop(event)
 	if (source.id.substring(0,11) == "Shared_brs_")
 	{
 
-		openModal("Processing...")
+		Modal_Loading.open("Processing...")
 
 		NBPanel.sharedTab.brush(source.id.substring(11)).copyToTab(target.dataset.id)
 		setTimeout(function()
 		{
-			closeModal();
+			Modal_Loading.close();
 		}, 250); 
 	}	
 
@@ -2404,87 +2465,32 @@ function tabDrag(ev)
 	document.getElementById(ev.target.id).onclick()
     ev.dataTransfer.setData("text", ev.target.id);
     var dragImage = document.createElement("img")
-   
 	ev.target.style.cursor = 'grabbing'
-	// dragImage.src = ""
 	ev.dataTransfer.setDragImage(dragImage, 0, 0)
 }
 
-function allowDrop(ev)
+
+
+
+function tabStartEdit()
 {
-	ev.preventDefault();
+	this.childNodes[0].disabled = ""
+	this.childNodes[0].setAttribute("data-oldvalue", this.childNodes[0].value)
+	this.childNodes[0].focus()
+	this.childNodes[0].select()
 }
 
-function sliderChange()
+function keydownSelectAll(e)
 {
-	NBPanel.settings.values.scaleSlider = document.getElementById("sizeSlider").value;
-	NBPanel.settings.write()
+    if (e.keyCode == 65 && e.ctrlKey) {document.getElementById("searchText").select()}
 }
 
-function removeElement(inElement)
-{
-	inElement.parentElement.removeChild(inElement)
-}
+/***********************HTML_END***********************************************************/
 
 
 
-function updateLook(inSlider)
-{
-	var curValue = inSlider
 
-	var scale = curValue/64;
-	var ShortThumb = {width:64, height:64};
-	var LongThumb = {width:256, height:64};
-	var Margin = {width:2, height:64}
-
-	var showLong = NBPanel.settings.values.showLongThumb
-	var showShort = NBPanel.settings.values.showShortThumb
-	var showText = NBPanel.settings.values.showText
-
-
-	this.button.childNodes[1].style.width = scale * (showShort * ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
-	this.button.childNodes[0].style.height = scale * ShortThumb.height + "px";
-	this.button.childNodes[0].style.width = scale * (showShort*ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
-
-	this.button.childNodes[0].style.backgroundSize = scale *showShort*ShortThumb.width + "px "+ scale * showShort *ShortThumb.height+"px," + showLong*LongThumb.width * scale + "px, " + showLong*LongThumb.height + "px";
-	this.button.childNodes[1].style.display = showText ? "block" : "none"	
-
-	this.button.childNodes[1].childNodes[1].style.width = this.button.childNodes[1].clientWidth - 40 + "px"//yy
-
-
-	//set colors
-	var brushData = this.data
-
-	var BG = this.button.childNodes[1].childNodes[0].childNodes[1].style
-	var FG = this.button.childNodes[1].childNodes[0].childNodes[0].style
-
-	if (brushData.colorBG == undefined)
-	brushData.colorBG = {red:48, green:48, blue:48}
-
-	if (brushData.colorFG == undefined)
-	brushData.colorFG = {red:48, green:48, blue:48}
-
-	var colorBG = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"
-	var colorFG = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"
-
-	BG.backgroundColor = NBPanel.settings.values.useColor ? colorBG : "#303030";
-	FG.backgroundColor = NBPanel.settings.values.useColor ? colorFG : "#303030";					
-}
-
-
-/////////////////////////////////////////////////////////////////////////////GENERAL
-
-function doubleDashes(inPath)
-{
-	return inPath.replace(/\\/g,"\\\\")
-}
-
-function padZeroes(num, size)
-{
-	var s = num+"";
-	while (s.length < size) s = "0" + s;
-	return s;
-}
+/***********************PHOTOSHOP**********************************************************/
 
 function setEntryPath(inPath,inColorFG,inColorBG)
 {
@@ -2497,37 +2503,12 @@ function setEntryPath(inPath,inColorFG,inColorBG)
 
 }
 
-function setBrush(inName)
-{
-	csInterface.evalScript("setToolPreset('" + inName + "');");
-}
+/***********************PHOTOSHOP_END******************************************************/
 
 
 
-function tabStartEdit()
-{
-	this.childNodes[0].disabled = ""
-	this.childNodes[0].setAttribute("data-oldvalue", this.childNodes[0].value)
-	this.childNodes[0].focus()
-	this.childNodes[0].select()
-}
 
-
-var modal = document.getElementById('myModal');
-
-function openModal(inText)
-{
- 	document.getElementById("modalText").innerHTML  = inText
-	modal.style.display = "block";
-}
-
-function closeModal()
-{
-	modal.style.display = "none";
-}
-
-
-
+/***********************GENERAL************************************************************/
 
 function getEntryInc(inPath)
 {
@@ -2547,16 +2528,11 @@ function getEntryInc(inPath)
 	return newTab;
 }
 
-function keydownSelectAll(e)
+function padZeroes(num, size)
 {
-    if (e.keyCode == 65 && e.ctrlKey) {document.getElementById("searchText").select()}
+	var s = num+"";
+	while (s.length < size) s = "0" + s;
+	return s;
 }
-
-
-
-
-
-
-
-
+/***********************GENERAL_END********************************************************/
 </script>
