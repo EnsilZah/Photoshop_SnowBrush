@@ -102,6 +102,8 @@
 		</div>
 
 		<div id="ContainerBar" oncontextmenu="contextDefault()" align = "left" style="position:fixed;width:100%;height:calc(100%);overflow:visible;background-color:#444444;px;margin:0;align:left">
+
+			<div id="sharedTabBrushGroup" class="scroll"></div>
 		</div>
 
 
@@ -426,12 +428,12 @@ function SnowBrushPanel()
 
 			var newEntryID = getEntryInc(NBPanel.path.entries)
 
-			var pathSource = path.joinU (inPath_Temp,"/Entries/00000000")
+			var pathSource = path.joinU (inPath_Temp,"Entries/00000000")
 			var pathDest = path.joinU(NBPanel.path.entries, newEntryID)
 			
 			fs.mkdirSync(pathDest);
 			fs.copySync(pathSource, pathDest)
-			fs.emptyDirSync(NBPanel.path.temp + "/unzip");		
+			fs.emptyDirSync( path.joinU (NBPanel.path.temp, "unzip") );		
 
 			appendEntryIDs([newEntryID])
 		},
@@ -440,7 +442,7 @@ function SnowBrushPanel()
 		{
 			Modal_Loading.open("Processing...")
 
-			var pathSource = path.joinU(inPath_Temp, "/Entries")
+			var pathSource = path.joinU(inPath_Temp, "Entries")
 			var curEntries = fs.readdirSync(pathSource)
 
 		    var newIDs = []
@@ -883,10 +885,10 @@ function SnowBrushPanel()
 				brushIndex:brushIndex,
 				element:NBPanel.tabs.tabList[tabIndex].brushes[brushIndex].button,
 
-
 				saveFile:function()
 				{
-					fs.writeFileSync( NBPanel.path.entries + "/" + this.id + "/" + "Entry.json", JSON.stringify(this.tabEntry.data));			
+					var pathDest = path.joinU(NBPanel.path.entries,  this.id, "Entry.json")
+					fs.outputJsonSync(pathDest, this.tabEntry.data)			
 				},
 
 				setColorBG:function()
@@ -931,7 +933,7 @@ function SnowBrushPanel()
 				{
 					var BPreset = "SB_Entry:" + this.id
 
-					fs.remove(NBPanel.path.entries+"/"+this.id)													//delete brush entry folder
+					fs.remove( path.joinU ( NBPanel.path.entries, this.id )  )													//delete brush entry folder
 					csInterface.evalScript("ToolPresets.removePresetByName('"+BPreset+"')");					//delete brush preset
 					removeElement(this.element)																	//remove brush html element
 					NBPanel.tabs.tabList[this.tabIndex].brushes.splice(this.brushIndex, 1)						//remove brush from tab list
@@ -947,129 +949,45 @@ function SnowBrushPanel()
 
 		createBrushButtonShared:function(inPath, inID)
 		{
-			var brushData = JSON.parse(fs.readFileSync(inPath+"/Entry.json", 'utf8'))
-			var inName = inID;
-			var inDisplayName = brushData.name;
+
+			var pathSource = path.joinU(inPath,"Entry.json")
+			var brushData = fs.readJsonSync(pathSource)
+
 		    var btnGrp = document.createElement("div");
+    		btnGrp.id = "Shared_brs_" + inID
 		    btnGrp.draggable = "true"
 			btnGrp.className = "BrushHolder"
-	
-			var btn = document.createElement("BUTTON");
+			btnGrp.ondragstart = function(event){brushDrag(event)}
+			btnGrp.ondragover =  function(event){brushDragOver(event)}
+			btnGrp.ondragend = function(event){brushSharedDragEnd(event)}
 
+
+			var btn = document.createElement("BUTTON");
+			btnGrp.appendChild(btn);
+			btn.className = "BrushButton"
+			btn.value = inID
+			btn.onclick = function(){eval(this.dataset.script)}
+			btn.oncontextmenu = function(event){event.stopPropagation(); contextSharedBrush(this.value)}
 
 
 			var stringFG = "JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorFG)"
 			var stringBG ="JSON.stringify(NBPanel.sharedTab.brush(\"" + inID + "\").tabEntry.data.colorBG)"
-			btn.dataset.script = "setEntryPath('" + inPath + "/Entry.abr" + "'," + stringFG + "," + stringBG + ")";
+			var pathABR = path.joinU(inPath, "Entry.abr") 
+			btn.dataset.script = "setEntryPath('" + pathABR + "'," + stringFG + "," + stringBG + ")";
 
-			btn.className = "BrushButton"
-			btn.value = inName
-			btn.onclick = function(){eval(this.dataset.script)}
-			btn.oncontextmenu = function(event){event.stopPropagation(); contextSharedBrush(this.value)}
-			btnGrp.appendChild(btn);
-
-
-		
-
-
-
-			var thumbShort = "url("+ encodeURI(inPath+"/ThumbShort.png")+"?" + new Date().getTime()  + ")"
-			var thumbLong = "url("+ encodeURI(inPath+"/ThumbLong.png")+"?" + new Date().getTime()  + ")"
-			btn.style.width = "322px"
+			var thumbShort = "url("+ encodeURI(path.joinU(inPath,"ThumbShort.png"))+"?" + new Date().getTime()  + ")"
+			var thumbLong = "url("+ encodeURI(path.joinU(inPath, "ThumbLong.png"))+"?" + new Date().getTime()  + ")"
 			btn.style.backgroundImage = thumbShort +"," + thumbLong
-			btn.style.backgroundPosition = "left top, right top"
-			btn.style.backgroundSize = "64px 64px, 256px 64px "
-			btn.style.backgroundRepeat = "no-repeat, no-repeat"
 
 
 
-
-
-			//Button Name text
-			var btn_Edit = document.createElement("input");
-			btn_Edit.type = "text"
-			btn_Edit.spellcheck="false"
-			btn_Edit.value = inDisplayName
-			btn_Edit.className = "editTab"
-			btn_Edit.id = "btn_Edit_" + inName
-			btn_Edit.disabled = "disabled"
-
-			btn_Edit.onkeydown = function(event)
-			{
-				switch(event.keyCode)
-				{
-					case 13: //Enter
-						this.disabled = "disabled"
-						this.dataset.oldvalue = this.value
-
-						var curID = this.id.substring(9)
-						var curBrush = NBPanel.sharedTab.brush(curID);
-						curBrush.tabEntry.data.name = this.value
-						curBrush.saveFile();
-						NBPanel.sharedTab.saveFile();
-						break;
-
-					case 27: //Esc
-						this.disabled = "disabled"
-						this.value = this.dataset.oldvalue
-						break;
-				}
-			}
-
-			btn_Edit.onblur = function()
-			{
-				this.disabled = "disabled"
-				this.value = this.dataset.oldvalue
-			}
 
 
 			//Text lable group
 			var textLabel = document.createElement("div");
+			btnGrp.appendChild(textLabel);
 			textLabel.className = "textLabel"
-
-
-
-
-
-			// Color buttons
-			var colorsGroup = document.createElement("span")
-			textLabel.appendChild(colorsGroup)
-			colorsGroup.style.marginRight = "10px"
-			var colorDefault = "#444444"
-
-			var colorL = document.createElement("button")
-			colorL.className = "ColorDotLeft"
-
-			colorL.onclick = function()
-			{
-				NBPanel.brushes.setBrushColor(NBPanel.sharedTab.brush(inID),true)
-
-			}
-
-			if (brushData.colorFG == null)
-			{colorL.style.backgroundColor = colorDefault}
-			else
-			{colorL.style.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"}
-			colorsGroup.appendChild(colorL)
-
-
-
-			var colorR = document.createElement("button")
-			colorR.className = "ColorDotRight"
-			colorR.onclick = function()
-			{
-				NBPanel.brushes.setBrushColor(NBPanel.sharedTab.brush(inID),false)
-			}
-			if (brushData.colorBG == null)
-			{colorR.style.backgroundColor = colorDefault}
-			else
-			{colorR.style.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"}
-			colorsGroup.appendChild(colorR)
-
-
-
-			textLabel.appendChild(btn_Edit)
-
+		
 			textLabel.ondblclick = function()
 			{
 				this.childNodes[1].disabled = ""
@@ -1077,13 +995,87 @@ function SnowBrushPanel()
 				this.childNodes[1].focus()
 			}
 
-			btnGrp.appendChild(textLabel);
 
-				btnGrp.draggable = "true"
-			btnGrp.ondragstart = function(event){brushDrag(event)}
-			btnGrp.id = "Shared_brs_" + inName
-			btnGrp.ondragover =  function(event){brushDragOver(event)}
-			btnGrp.ondragend = function(event){brushSharedDragEnd(event)}
+
+
+				// Color buttons
+				var colorsGroup = document.createElement("span")
+				textLabel.appendChild(colorsGroup)
+				colorsGroup.style.marginRight = "10px"
+				var colorDefault = "#444444"
+
+				var colorL = document.createElement("button")
+				colorL.className = "ColorDotLeft"
+
+				colorL.onclick = function()
+				{
+					NBPanel.brushes.setBrushColor(NBPanel.sharedTab.brush(inID),true)
+
+				}
+
+				if (brushData.colorFG == null)
+				{colorL.style.backgroundColor = colorDefault}
+				else
+				{colorL.style.backgroundColor = "rgb("+ Math.floor(brushData.colorFG.red) + "," + Math.floor(brushData.colorFG.green) + "," + Math.floor(brushData.colorFG.blue) +")"}
+				colorsGroup.appendChild(colorL)
+
+				var colorR = document.createElement("button")
+				colorR.className = "ColorDotRight"
+				colorR.onclick = function()
+				{
+					NBPanel.brushes.setBrushColor(NBPanel.sharedTab.brush(inID),false)
+				}
+				if (brushData.colorBG == null)
+				{colorR.style.backgroundColor = colorDefault}
+				else
+				{colorR.style.backgroundColor = "rgb("+ Math.floor(brushData.colorBG.red) + "," + Math.floor(brushData.colorBG.green) + "," + Math.floor(brushData.colorBG.blue) +")"}
+				colorsGroup.appendChild(colorR)
+
+
+
+				//Button Name text
+				var btn_Edit = document.createElement("input");
+				textLabel.appendChild(btn_Edit)
+				btn_Edit.type = "text"
+				btn_Edit.id = "btn_Edit_" + inID
+
+				btn_Edit.spellcheck="false"
+				btn_Edit.value = brushData.name
+				btn_Edit.className = "editTab"
+				btn_Edit.disabled = "disabled"
+
+				btn_Edit.onkeydown = function(event)
+				{
+					switch(event.keyCode)
+					{
+						case 13: //Enter
+							this.disabled = "disabled"
+							this.dataset.oldvalue = this.value
+
+							var curID = this.id.substring(9)
+							var curBrush = NBPanel.sharedTab.brush(curID);
+							curBrush.tabEntry.data.name = this.value
+							curBrush.saveFile();
+							NBPanel.sharedTab.saveFile();
+							break;
+
+						case 27: //Esc
+							this.disabled = "disabled"
+							this.value = this.dataset.oldvalue
+							break;
+					}
+				}
+				btn_Edit.onblur = function()
+				{
+					this.onkeydown({keyCode:27})
+				}
+	
+
+	
+
+	
+
+
 			
 			return btnGrp;
 		},
@@ -1099,7 +1091,6 @@ function SnowBrushPanel()
 		    var btnGrp = document.createElement("div");
 		    btnGrp.draggable = "true"
 			btnGrp.className = "BrushHolder"
-			btnGrp.draggable = "true"
 			btnGrp.ondragstart = function(event){brushDrag(event)}
 			btnGrp.id = "brs_" + inBrushID
 			btnGrp.ondragover =  function(event){brushDragOver(event)}
@@ -1108,14 +1099,14 @@ function SnowBrushPanel()
 
 			var btn = document.createElement("BUTTON");
 			btnGrp.appendChild(btn);
+			btn.value = inBrushID
 			btn.className = "BrushButton"
 
 			var stringFG = "JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorFG)"
 			var stringBG ="JSON.stringify(NBPanel.brushes.brush(\"" + inBrushID + "\").tabEntry.data.colorBG)"
 			var stringPath = path.joinU (NBPanel.path.entries, inBrushID, "Entry.abr")			
-
-			btn.value = inBrushID
 			btn.dataset.script = "setEntryPath('" + stringPath + "'," + stringFG + "," + stringBG + ");" +	"NBPanel.recentBrushes.add('" + stringPath + "')";
+
 			btn.onclick = function(){eval(this.dataset.script)}
 			btn.oncontextmenu = function(event){event.stopPropagation(); contextBrush(this.value)}
 
@@ -1180,12 +1171,6 @@ function SnowBrushPanel()
 				btn_Edit.id = "btn_Edit_" + inBrushID
 				btn_Edit.value = brushData.name
 
-				btn_Edit.onblur = function()
-				{
-					this.disabled = "disabled"
-					this.value = this.dataset.oldvalue
-				}
-
 				btn_Edit.onkeydown = function(event)
 				{
 					switch(event.keyCode)
@@ -1201,10 +1186,15 @@ function SnowBrushPanel()
 							break;
 
 						case 27: //Esc
-							this.onblur();
+							this.disabled = "disabled"
+							this.value = this.dataset.oldvalue
 							break;
 					}
 
+				}
+				btn_Edit.onblur = function()
+				{
+					this.onkeydown({keyCode:27})
 				}
 
 		
@@ -1215,20 +1205,17 @@ function SnowBrushPanel()
 		{
 			var sliderValue = document.getElementById("sizeSlider").value
 			var curTabs = NBPanel.tabs.tabList
-
-			for (var i = 0; i < NBPanel.sharedTab.brushList.length; i++)
-			{
-				NBPanel.sharedTab.brushList[i].update(sliderValue);
-			}
-
-
-
 			for (var i = 0; i < curTabs.length; i++)
 			{
 				for (var j = 0; j < curTabs[i].brushes.length; j++)
 				{
 					curTabs[i].brushes[j].update(sliderValue);
 				}
+			}
+
+			for (var i = 0; i < NBPanel.sharedTab.brushList.length; i++)
+			{
+				NBPanel.sharedTab.brushList[i].update(sliderValue);
 			}
 		},
 
@@ -1238,8 +1225,8 @@ function SnowBrushPanel()
 	this.sharedTab=
 	{
 		brushList:[],
-		tabButton:null,
-		tabBody:null,
+		tabButton:document.getElementById("btn_Shared"),
+		tabBody:document.getElementById("sharedTabBrushGroup"),
 
 		onFolderChange:function (event, filename)
 		{
@@ -1285,7 +1272,8 @@ function SnowBrushPanel()
 
 				saveFile:function()
 				{
-					fs.writeFileSync( NBPanel.settings.values.shareLocation + "/entries/" + this.id + "/Entry.json", JSON.stringify(this.tabEntry.data));			
+					var pathDest = path.joinU (NBPanel.settings.values.shareLocation, "entries" ,this.id, "Entry.json")
+					fs.outputJsonSync(pathDest, this.tabEntry.data)			
 				},
 
 				removeBrush:function()
@@ -1293,7 +1281,9 @@ function SnowBrushPanel()
 					removeElement(this.tabEntry.button)
 					NBPanel.sharedTab.brushList.splice(this.index,1)
 					NBPanel.sharedTab.saveFile();
-					fs.removeSync(NBPanel.settings.values.shareLocation+ "/entries/" + this.id)
+
+					var pathDest = path.joinU(NBPanel.settings.values.shareLocation,"entries",this.id)
+					fs.removeSync(pathDest)
 				},
 
 				copyToTab:function (inTab)
@@ -1302,9 +1292,11 @@ function SnowBrushPanel()
 
 					var newEntryID = getEntryInc(NBPanel.path.entries)
 
-					var curPath = NBPanel.path.entries + "/" + newEntryID
-					fs.mkdirSync(curPath);
-					fs.copySync(NBPanel.settings.values.shareLocation + "/entries/" + this.id, curPath)
+					var pathDest = path.joinU(NBPanel.path.entries, newEntryID) 
+					fs.mkdirSync(pathDest);
+
+					var pathSource = path.joinU(NBPanel.settings.values.shareLocation, "entries", this.id)
+					fs.copySync(pathSource, pathDest)
 
 
 					NBPanel.tabs.tab(inTab).listTab.data.brushes.push(newEntryID)
@@ -1325,32 +1317,18 @@ function SnowBrushPanel()
 
 		init:function()
 		{
-			//create tab body
-		    var brushGroup = document.createElement("div");
-			brushGroup.id = "sharedTabBrushGroup"
-			brushGroup.className = "scroll"
-			document.getElementById("ContainerBar").appendChild(brushGroup)
-			NBPanel.sharedTab.tabBody = brushGroup;
-
-
 			//Set tabness
-			var sharedTabButton = document.getElementById("btn_Shared")
-			sharedTabButton.dataset.id = "SHARED"
-			sharedTabButton.onclick = function()
+			this.tabButton.dataset.id = "SHARED"
+			this.tabButton.onclick = function()
 			{
 				if (this.childNodes[0].disabled != "")
 				{
 					NBPanel.tabs.tab(this.dataset.id).setActive()
 				}
 			}
-			sharedTabButton.ondrop = function(event){tabSharedOnDrop(event)}
-
-
-			NBPanel.sharedTab.tabButton = sharedTabButton;
-
+			this.tabButton.ondrop = function(event){tabSharedOnDrop(event)}
 
 			this.loadEntries();
-
 
 			var pathSource = path.joinU (NBPanel.settings.values.shareLocation, "manifest.json")
 			fs.watchFile(pathSource, {persistent:true, interval:1000}, NBPanel.sharedTab.onFolderChange);
@@ -1358,32 +1336,30 @@ function SnowBrushPanel()
 
 		loadEntries:function()
 		{
-			var pathSource = path.joinU (NBPanel.settings.values.shareLocation, "manifest.json")
 			try
 			{
-				var brushList = fs.readJsonSync(pathSource).brushes
+				var pathSource = path.joinU (NBPanel.settings.values.shareLocation, "manifest.json")
+				var loadedBrushList = fs.readJsonSync(pathSource).brushes
 			}
 			catch(e)
 			{
 				return // No entries found
 			}
 
-			for (var i = 0; i < brushList.length; i++)
+			for (var i = 0; i < loadedBrushList.length; i++)
 			{
-				NBPanel.sharedTab.createBrush(brushList[i])
+				NBPanel.sharedTab.createBrush(loadedBrushList[i])
 			}	
 
 		},
 
 		refresh:function()
 		{
-
 			while (NBPanel.sharedTab.brushList.length > 0)
 			{
 				var curBrush = NBPanel.sharedTab.brushList.pop()
 				removeElement(curBrush.button)
 			}
-
 			this.loadEntries();
 
 			NBPanel.brushes.updateLook()
@@ -1396,11 +1372,10 @@ function SnowBrushPanel()
 			var brushData = fs.readJsonSync(pathEntry)	
 
 			var newButton = NBPanel.brushes.createBrushButtonShared(pathSource, inID)
-			NBPanel.sharedTab.tabBody.appendChild(newButton)
-	
+			this.tabBody.appendChild(newButton)
 
 			var curBrushData = {id: inID, button:newButton, update:NBPanel.event.updateBrush, data:brushData}
-			NBPanel.sharedTab.brushList.push(curBrushData)				
+			NBPanel.sharedTab.brushList.push(curBrushData)			
 		},
 
 		appendBrush:function(inBrush)
@@ -1490,12 +1465,16 @@ function SnowBrushPanel()
 			try
 			{
 
-				var tabData = JSON.parse(fs.readFileSync(NBPanel.path.data + "/" +  this.tabListFile, 'utf8'));
+				var pathSource = path.joinU( NBPanel.path.data, this.tabListFile)
+				var tabData = fs.readJsonSync(pathSource)
+
+
 				this.activeTab = tabData.active;
 				
 				for(var i = 0; i < tabData.tabs.length; i++)
 				{
-					var curTabData =  JSON.parse( fs.readFileSync(NBPanel.path.tabs + "/" + tabData.tabs[i]) )
+					var pathSource = path.joinU (NBPanel.path.tabs, tabData.tabs[i])
+					var curTabData = fs.readJsonSync(pathSource)
 					this.tabList.push({data:curTabData, brushes:[]})
 				}
 
@@ -1606,13 +1585,13 @@ function SnowBrushPanel()
 
 			var tabData = {active: this.activeTab, tabs:[]}
 
-
 			for (var i = 0; i < this.tabList.length; i++)
 			{
 				tabData.tabs.push(this.tabList[i].data.id)
 			}	
 
-			fs.writeFileSync(NBPanel.path.data + "/" +  this.tabListFile, JSON.stringify(tabData))
+			var pathDest = path.joinU(NBPanel.path.data, this.tabListFile)
+			fs.outputJsonSync(pathDest, tabData)
 		},
 
 		appendTab:function(inName, inStartEdit)
@@ -1623,7 +1602,8 @@ function SnowBrushPanel()
 
 			tabData = {id:newTab ,name:inName, brushes:[]}
 
-			fs.writeFileSync(NBPanel.path.tabs + newTab, JSON.stringify(tabData));
+			var pathDest = path.joinU(NBPanel.path.tabs, newTab)
+			fs.outputJsonSync(pathDest, tabData)
 
 
 			var curTab = {data:tabData, brushes:[]}
@@ -1636,12 +1616,11 @@ function SnowBrushPanel()
 			if (inStartEdit)
 			{ this.tab(tabData.id).listTab.button.ondblclick();}
 
-			
-
+			NBPanel.event.resizeDoc()
 		},
 
-		tabIndex:function(inIndex)
-		{
+		tabIndex:function(inIndex
+)		{
 						//alert(inIndex)
 			if (inIndex == null) return null;
 
@@ -1657,12 +1636,15 @@ function SnowBrushPanel()
 				appendBrush:function(inBrushID)
 				{
 					var newButton = NBPanel.brushes.createBrushButton(inBrushID)
-					var brushData = JSON.parse(fs.readFileSync(NBPanel.path.entries+"/"+inBrushID+"/Entry.json", 'utf8'))				
+					
+					var pathSource = path.joinU(NBPanel.path.entries,inBrushID,"Entry.json")
+					var brushData = fs.readJsonSync(pathSource)			
 					this.listTab.brushes.push({data:brushData, id:inBrushID, button:newButton, update:NBPanel.event.updateBrush})
 
 					this.listTab.brushGroup.appendChild(newButton)
 
-					NBPanel.brushes.updateLook(); // improve by updating only current button.
+					var sliderValue = document.getElementById("sizeSlider").value
+					this.listTab.brushes[this.listTab.brushes.length-1].update(sliderValue)
 				},
 
 				getBrushIDs:function()
@@ -1676,7 +1658,8 @@ function SnowBrushPanel()
 
 				writeFile:function()
 				{
-					fs.writeFileSync(NBPanel.path.tabs + "/" + this.id, JSON.stringify(this.listTab.data));
+					var pathDest = path.joinU(NBPanel.path.tabs, this.id)
+					fs.outputJsonSync(pathDest , this.listTab.data)
 				},
 
 				rename:function(inName)
@@ -1751,13 +1734,14 @@ function SnowBrushPanel()
 
 						try
 						{
-							fs.removeSync(NBPanel.path.tabs + "/" + currentObj.id)	
+							fs.removeSync(path.joinU(NBPanel.path.tabs, currentObj.id))	
 						}
 						catch(e){alert(e)}
 						
 						NBPanel.tabs.tabList.splice(currentObj.index, 1)
 						NBPanel.tabs.tabIndex((currentObj.index-1)>-1 ? currentObj.index-1 : 0).setActive()
-						NBPanel.tabs.writeTabListFile()			
+						NBPanel.tabs.writeTabListFile()
+						NBPanel.event.resizeDoc()	
 					}
 				},
 
