@@ -73,7 +73,7 @@ var modalSettings =
 		NBPanel.settings.showSearch(this.tempSettings.showSearch);
 		NBPanel.settings.showShared(this.tempSettings.showShared);
 		NBPanel.settings.write();
-		onDocResize()
+		NBPanel.event.resizeDoc();
 
 		this.close();
 	},
