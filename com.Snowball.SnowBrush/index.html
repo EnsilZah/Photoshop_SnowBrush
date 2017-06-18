@@ -19,10 +19,6 @@
 <link id="ppstyle" rel="stylesheet" type="text/css" href="./css/style.css">
 
 <html>
-	<head>
-		<meta charset="utf-8">
-	</head>
-
 	<body id="mainBody" onresize="NBPanel.event.resizeDoc()" onLoad="onLoadedDoc();" style="overflow: hidden; padding:0px; margin:0px; height:100%" ondrop='NBPanel.import.dropped(event)'>
 
 
@@ -35,14 +31,9 @@
 	<span id="Modal_Loading_Container" style="margin: 0 0 0 0;"></span>
 	<script>$("#Modal_Loading_Container").load("HTML/Modals/Modal_Loading.html");</script>
 
-
-
-
 	<div style="padding:0;margin:0">
 
-
 		<div id="ToolBar" class="inputBar" oncontextmenu="contextDefault()" align="left" style="height:inherit;"  >
-
 			<button class="toolButton" onclick="NBPanel.tool.brush.set()">			<img src='images/ToolBrush.png'  alt='' align='center' style='margin:0'>			</button>
 			<button class="toolButton">			<img src='images/ToolPencil.png' onclick="NBPanel.tool.pencil.set()" alt='' align='center' style='margin:0'>			</button>
 			<button class="toolButton">			<img src='images/ToolMixBrush.png' onclick="NBPanel.tool.mixbrush.set()" alt='' align='center' style='margin:0'>		</button>
@@ -54,45 +45,27 @@
 			<button class="toolButton">			<img src='images/ToolBurn.png'onclick="NBPanel.tool.burn.set()" alt='' align='center' style='margin:0'>					</button>
 			<button class="toolButton">			<img src='images/ToolSponge.png'onclick="NBPanel.tool.sponge.set()" alt='' align='center' style='margin:0'>				</button>
 			<button class="toolButton">			<img src='images/toolStamp.png'onclick="NBPanel.tool.stamp.set()" alt='' align='center' style='margin:0'>				</button>
-	
-
-
 		</div>
-			<div id="RecentBar" class="inputBar"  oncontextmenu="contextDefault()" align = "left"  >
-		</div>
+			
 
-
-
-
-
-
-
-		</table>
+		<div id="RecentBar" class="inputBar"  oncontextmenu="contextDefault()" align = "left"  ></div>
 
 
 		<div id="SearchBar" class="inputBar" oncontextmenu="contextDefault()" align = "left" style="" >
-
 			<table width="100%" style="position: relative;top:-2px">
-
-			<td  align='left' >
-				<img src='images/search.png' alt='' align='center' style="padding:0 1px 0 3px" >
-			</td>
+				<td  align='left' >
+					<img src='images/search.png' alt='' align='center' style="padding:0 1px 0 3px" >
+				</td>
 
 				<td width="100%">
 					<input id="searchText" type="text" align='center' onkeydown="keydownSelectAll(event)" onkeyup="NBPanel.search.update(event);" class="textStrip" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:inherit;">
-
 				</td>
-
-
 
 				<td align='right' style='white-space: nowrap;'>		
 					<button class="toolButton" align="right" onclick="NBPanel.search.clear()" style="border-radius:6px;  width:18px;height:18px;position: relative; top:0px">X</button>
 					<button class="toolButton" id="searchToggleAll" align="right" onclick="NBPanel.search.setAll(!NBPanel.search.searchAll)" style="width:35px;height:18px;position: relative; top:0px">All</button>		
 				</td>
 			</table>
-
-
-
 		</div>
 
 
@@ -100,6 +73,7 @@
 			<button id='btn_AddEntry' style="border-color:#303030" onclick="NBPanel.tabs.appendTab('Untitled');" class="TabButton" >+</button>	
 			<button id='btn_Shared' oncontextmenu="event.stopPropagation(); contextSharedTab()" class="TabButton TabShared" style="border-color:#303030;position:relative;top:-2px;"  >Shared </button>	
 		</div>
+
 
 		<div id="ContainerBar" oncontextmenu="contextDefault()" align = "left" style="position:fixed;width:100%;height:calc(100%);overflow:visible;background-color:#444444;px;margin:0;align:left">
 
@@ -638,6 +612,7 @@ function SnowBrushPanel()
 		brushGroup:null,
 		textElement:document.getElementById("searchText"),
 		searchAllElement:document.getElementById("searchToggleAll"),
+		tabBody:null,
 
 		//zzz
 
@@ -705,7 +680,7 @@ function SnowBrushPanel()
 			brushGroupElement.id = "searchResultBrushGroup"
 			brushGroupElement.className = "scroll"
 			document.getElementById("ContainerBar").appendChild(brushGroupElement)
-			NBPanel.sharedTab.tabBody = brushGroupElement;
+			this.tabBody = brushGroupElement;
 
 			this.brushGroup = brushGroupElement;
 			brushGroupElement.style.display = "none"
@@ -1375,7 +1350,7 @@ function SnowBrushPanel()
 			this.tabBody.appendChild(newButton)
 
 			var curBrushData = {id: inID, button:newButton, update:NBPanel.event.updateBrush, data:brushData}
-			NBPanel.sharedTab.brushList.push(curBrushData)			
+			NBPanel.sharedTab.brushList.push(curBrushData)	
 		},
 
 		appendBrush:function(inBrush)
