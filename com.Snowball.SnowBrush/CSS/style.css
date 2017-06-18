@@ -263,6 +263,7 @@ button.TabShared
     font-style:italic;
     color:#cccccc;
     border-color:#333333;
+    border-width: 2px;
 
 
 }
@@ -272,9 +273,9 @@ input.editTab
     align-self: right;
     background-color: #222222;
     color:#ffffff;
-        border-width: 0px;
+    border-width: 0px;
     font-weight:lighter;
-    box-sizing:content-box;
+
     font-size: 10px;
     outline: none;
     overflow:hidden;
@@ -414,7 +415,15 @@ object{
 .modal-content {
     background-color: rgba(10,10,10,0.9);
     color: rgb(200,200,200);
-    margin: 50% auto; 
+    position: relative;
+ 
+    margin:auto;
+    top:40%;
+    vertical-align:middle;
+
+
+    text-align: center;
+    vertical-align: middle;
     padding: 5px;
 
     border-radius : 6px;
@@ -457,6 +466,8 @@ div.textLabel
     align-self: center;
     width: 128px;
     height:18px;
+    min-width: 0px;
+    min-height: 0px
     -webkit-background-clip: padding-box;
     background-clip: padding-box;
     border-radius : 2px;

@@ -1,7 +1,7 @@
 	<div id="modalLoading" class="modal">
 		<div class="modal-content">
     		<p id="modalText">Processing</p>
-	    	<img src='images/load.gif' alt='' align='center' style="height:25px; width:25px">
+	    	<img src='images/load.gif' alt='' align='center' style="height:25px; width:25px;margin-bottom: 10px">
 		</div>
 	</div>
 
@@ -10,10 +10,11 @@
 var Modal_Loading =
 {
 	element: document.getElementById("modalLoading"),
+	text: document.getElementById("modalText"),
 
 	open:function(inText)
 	{
-		this.element.innerHTML  = inText
+		document.getElementById("modalText").innerHTML = inText
 		this.element.style.display = "block";
 	},
 

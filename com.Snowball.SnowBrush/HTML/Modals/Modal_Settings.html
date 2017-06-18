@@ -18,11 +18,12 @@
 			<button class='newButton modalButton' id="btnSettings_showSearch" onClick='modalSettings.setShowSearch(!modalSettings.tempSettings.showSearch)' style= "width: 60px"> Show </button>
 		</fieldset>
 
+<!--
     	<fieldset class="optionGroup" style="height:50px; width:200px;vertical-align:middle;">
      	<legend style="color:color:rgba(215,215,215,1);font-weight:bold;">Shared</legend>
 			<button class='newButton modalButton' id="btnSettings_showShared" onClick='modalSettings.setShowShared(!modalSettings.tempSettings.showShared)'  style= "width: 60px"> Show </button>
 		</fieldset>
-
+-->
    		<fieldset class="optionGroup" style="height:50px; width:200px;vertical-align:middle;">
      	<legend style="color:color:rgba(215,215,215,1);font-weight:bold;">Persistent</legend>
 			<button class='newButton modalButton' id="btnSettings_enabledPersist" onClick='modalSettings.setPersist(!modalSettings.tempSettings.enablePersist)'  style= "width: 60px"> Enabled </button>
@@ -46,7 +47,7 @@ var modalSettings =
 		showTools:true,
 		showRecent:true,
 		showSearch:true,
-		showShared:true,
+	//	showShared:true,
 		enablePersist:true,
 	},
 
@@ -55,7 +56,7 @@ var modalSettings =
 		this.setShowTools(NBPanel.settings.values.showTools);
 		this.setShowRecent(NBPanel.settings.values.showRecent);
 		this.setShowSearch(NBPanel.settings.values.showSearch);
-		this.setShowShared(NBPanel.settings.values.showShared);
+	//	this.setShowShared(NBPanel.settings.values.showShared);
 
 		this.modal.style.display = "block";
 	},
@@ -71,7 +72,7 @@ var modalSettings =
 		NBPanel.settings.showTools(this.tempSettings.showTools);
 		NBPanel.settings.showRecent(this.tempSettings.showRecent);
 		NBPanel.settings.showSearch(this.tempSettings.showSearch);
-		NBPanel.settings.showShared(this.tempSettings.showShared);
+	//	NBPanel.settings.showShared(this.tempSettings.showShared);
 		NBPanel.settings.write();
 		NBPanel.event.resizeDoc();
 

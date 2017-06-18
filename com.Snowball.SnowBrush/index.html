@@ -1,8 +1,9 @@
 <!doctype html>
 
 <script src="./js/JSX.js"></script>
-<script src="./lib/CSInterface.js"></script>
-<script src="./jQueryAssets/jquery-1.8.3.min.js"></script>
+<script src="./js/HTML.js"></script>
+<script src="./js/CSInterface.js"></script>
+<script src="./js/jquery-1.8.3.min.js"></script>
 
 <script>	
  	var fs = require('fs-extra');
@@ -48,7 +49,12 @@
 		</div>
 			
 
-		<div id="RecentBar" class="inputBar"  oncontextmenu="contextDefault()" align = "left"  ></div>
+		<div id="RecentBar" class="inputBar"  oncontextmenu="contextDefault()" align = "left">
+			<img src='images/recent.png' style="float:left; margin-top:4px; margin-left: 4px" >
+		
+				<div id ="RecentContainer" style="overflow:hidden;" width="100%"></div>
+
+		</div>
 
 
 		<div id="SearchBar" class="inputBar" oncontextmenu="contextDefault()" align = "left" style="" >
@@ -70,7 +76,7 @@
 
 
 		<div id="TopBar" class="inputBar" oncontextmenu="contextDefault()" align="left" style="position:relative;bottom:-1px; height:inherit;overflow:visible;background-image:URL(./images/elements/tabdivider.png);">
-			<button id='btn_AddEntry' style="border-color:#303030" onclick="NBPanel.tabs.appendTab('Untitled');" class="TabButton" >+</button>	
+			<button id='btn_AddEntry' style="border-color:#303030; border-width: 2px;" onclick="NBPanel.tabs.appendTab('Untitled');" class="TabButton" >+</button>	
 			<button id='btn_Shared' oncontextmenu="event.stopPropagation(); contextSharedTab()" class="TabButton TabShared" style="border-color:#303030;position:relative;top:-2px;"  >Shared </button>	
 		</div>
 
@@ -138,73 +144,16 @@
 	</body>
 </html>
 
-<script> //HTML related stuff
-
-
-window.addEventListener("dragover",function(e){e = e || event; e.preventDefault();},false);
-window.addEventListener("drop",function(e){e = e || event; e.preventDefault();},false);
-
-//Prevent drag-select
-document.onselectstart = function(e)
-{
-    if(e.stopPropagation) e.stopPropagation();
-    if(e.preventDefault) e.preventDefault();
-    e.cancelBubble=true;
-    e.returnValue=false;
-    return false;
-};	
-
-
-
-function allowDrop(ev)
-{
-	ev.preventDefault();
-}
-
-function removeElement(inElement)
-{
-	inElement.parentElement.removeChild(inElement)
-}
-
-
-
-
-
-
-
-
-
-
-//Main code
-
+<script>
+/******************************************************  Main code ******************************************************************/
+/************************************************************************************************************************************/
 var NBPanel = null;
 
 function onLoadedDoc()
 {
 	NBPanel = new SnowBrushPanel();
-
 	NBPanel.initialize();
 }
-
-
-
-
-
-appendEntryIDs = function(retVal)
-{
-	var curTab = NBPanel.tabs.tabList[NBPanel.tabs.activeTab]
-
-	for (var i = 0; i < retVal.length; i++)
-	{	
-			curTab.data.brushes.push(retVal[i])
-			NBPanel.tabs.tabCurrent().appendBrush(retVal[i])
-	}
-
-	NBPanel.tabs.tabCurrent().writeFile()		
-	NBPanel.brushes.updateLook()
-	Modal_Loading.close()
-}
-
 
 function SnowBrushPanel()
 {
@@ -216,7 +165,6 @@ function SnowBrushPanel()
 		Margin: {width:2, height:64},
 		DefaultColor: {red:48, green:48, blue:48},
 		DefaultColorH: "#303030",
-
 	}
 
 	this.event = 
@@ -244,15 +192,16 @@ function SnowBrushPanel()
 			var showText = NBPanel.settings.values.showText
 
 			var ThumbButton = this.button.childNodes[0];
-			var TextButton = this.button.childNodes[1];
-			
-			TextButton.childNodes[1].style.width = TextButton.clientWidth - 40 + "px"	
-			TextButton.style.width = scale * (showShort * ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
-			TextButton.style.display = showText ? "block" : "none"
-	
 			ThumbButton.style.height = scale * ShortThumb.height + "px";
 			ThumbButton.style.width = scale * (showShort*ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
 			ThumbButton.style.backgroundSize = scale *showShort*ShortThumb.width + "px "+ scale * showShort *ShortThumb.height+"px," + showLong*LongThumb.width * scale + "px, " + showLong*LongThumb.height + "px";
+
+
+			var TextButton = this.button.childNodes[1];
+			TextButton.style.width = scale * (showShort * ShortThumb.width +  Margin.width + showLong * LongThumb.width) + "px";
+			TextButton.childNodes[1].style.width = TextButton.clientWidth - 40 + "px"	
+			TextButton.style.display = showText ? "block" : "none"
+
 
 
 			var BG = TextButton.childNodes[0].childNodes[1].style
@@ -309,6 +258,9 @@ function SnowBrushPanel()
 	{
 		dropped: function(event)
 		{
+			if (NBPanel.tabs.activeTab == "SHARED")
+				return;
+
 			event.dataTransfer.items[0].getAsString(function(s)
 			{
 				data = JSON.parse(s);
@@ -320,7 +272,7 @@ function SnowBrushPanel()
 					brushName = data.assetList[0].name
 
 					var dataJSX = {pathEntries:NBPanel.path.entries, pathTemp:NBPanel.path.temp, brushID:brushID, brushName:brushName}
-					JSONtoJSX("createEntryFromExisting", dataJSX, appendEntryIDs)
+					JSONtoJSX("createEntryFromExisting", dataJSX, NBPanel.tabs.appendEntryIDs)
 				}
 			})
 		},
@@ -331,7 +283,7 @@ function SnowBrushPanel()
 
 			//TODO: Need to ensure we are using correct tool type.
 			var dataJSX = {pathEntries:NBPanel.path.entries, pathTemp:NBPanel.path.temp}
-			JSONtoJSX("createEntryFromExisting", dataJSX, appendEntryIDs)			
+			JSONtoJSX("createEntryFromExisting", dataJSX, NBPanel.tabs.appendEntryIDs)			
 		},
 
 		file:function()// AddFromFile()
@@ -349,10 +301,10 @@ function SnowBrushPanel()
 			{
 				case ".abr":
 					command = 
-					JSONtoJSX("entriesFromABR", dataJSX, appendEntryIDs)
+					JSONtoJSX("entriesFromABR", dataJSX, NBPanel.tabs.appendEntryIDs)
 					break;
 				case ".tpl":
-					JSONtoJSX("entriesFromTPL", dataJSX, appendEntryIDs)
+					JSONtoJSX("entriesFromTPL", dataJSX, NBPanel.tabs.appendEntryIDs)
 					break;
 				case ".zip":
 					this.zip(curFile);
@@ -409,7 +361,7 @@ function SnowBrushPanel()
 			fs.copySync(pathSource, pathDest)
 			fs.emptyDirSync( path.joinU (NBPanel.path.temp, "unzip") );		
 
-			appendEntryIDs([newEntryID])
+			NBPanel.tabs.appendEntryIDs([newEntryID])
 		},
 
 		tab:function(inPath_Temp)
@@ -434,7 +386,7 @@ function SnowBrushPanel()
 		    var tabName = fs.readJsonSync(pathTab).name
 			NBPanel.tabs.appendTab(tabName, false)
 
-			appendEntryIDs(newIDs)
+			NBPanel.tabs.appendEntryIDs(newIDs)
 		},
 
 	}
@@ -552,7 +504,7 @@ function SnowBrushPanel()
 	//TODO: make sure recent brush button is removed when brush is removed.
 	this.recentBrushes=
 	{
-		element: document.getElementById("RecentBar"),
+		element: document.getElementById("RecentContainer"),
 		maxLength:30,
 		list:[],
 
@@ -801,6 +753,8 @@ function SnowBrushPanel()
 
 		getCurrent: function()
 		{
+			if (NBPanel.tabs.activeTab == "SHARED")
+				return NBPanel.sharedTab.brushList
 			return NBPanel.tabs.tabList[NBPanel.tabs.activeTab].brushes;
 		},
 
@@ -813,9 +767,14 @@ function SnowBrushPanel()
 			var id = inBrush.tabEntry.id
 			
 
+			var outData = {isFG:isFG, colorBG:tabEntry.data.colorBG, colorFG:tabEntry.data.colorFG}
 
-			JSONtoJSX("pickColor", {}, function(retVal)
+
+			//alert(JSON.stringify( tabEntry.data.colorFG))
+
+			JSONtoJSX("pickColor", outData, function(retVal)
 			{
+
 				if (retVal == null) return;
 				curElement.style.backgroundColor ="rgb("+Math.floor(retVal.red)+","+Math.floor(retVal.green)+","+Math.floor(retVal.blue)+")"
 				if (isFG)
@@ -1299,6 +1258,8 @@ function SnowBrushPanel()
 				if (this.childNodes[0].disabled != "")
 				{
 					NBPanel.tabs.tab(this.dataset.id).setActive()
+					NBPanel.search.update()
+					NBPanel.brushes.updateLook();
 				}
 			}
 			this.tabButton.ondrop = function(event){tabSharedOnDrop(event)}
@@ -1435,6 +1396,21 @@ function SnowBrushPanel()
 		},
 
 
+		appendEntryIDs:function(retVal)
+		{
+			var curTab = NBPanel.tabs.tabList[NBPanel.tabs.activeTab]
+
+			for (var i = 0; i < retVal.length; i++)
+			{	
+					curTab.data.brushes.push(retVal[i])
+					NBPanel.tabs.tabCurrent().appendBrush(retVal[i])
+			}
+
+			NBPanel.tabs.tabCurrent().writeFile()		
+			NBPanel.brushes.updateLook()
+			Modal_Loading.close()
+		},
+
 		readTabListFile:function()
 		{
 			try
@@ -1530,6 +1506,7 @@ function SnowBrushPanel()
 				if (this.childNodes[0].disabled != "")
 				{
 					NBPanel.tabs.tab(this.dataset.id).setActive()
+					NBPanel.search.update()
 				}
 
 			}

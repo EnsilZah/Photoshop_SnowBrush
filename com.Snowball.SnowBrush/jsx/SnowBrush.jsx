@@ -6,8 +6,6 @@ function sID (inVal) { return stringIDToTypeID(inVal);}
 cTID = function(s) { return app.charIDToTypeID(s); };
 sTID = function(s) { return app.stringIDToTypeID(s); };
 
-var entryPrefix = "SB_Entry:"
-
 var ToolPresets = new ToolPresetManager;
 
 
@@ -25,19 +23,14 @@ function getEntryInc(inPath_Entries)
     var newEntry;
       
     if (curEntries.length == 0)
-    {
-        newEntry = padZeroes(0,8);
-    }
+    { newEntry = padZeroes(0,8); }
     else
-    {
-        newEntry =  padZeroes ( Number(curEntries[curEntries.length-1].name) + 1 , 8)  
-    }
+    { newEntry =  padZeroes ( Number(curEntries[curEntries.length-1].name) + 1 , 8) }
 
     return newEntry;
 }
 
 
-//xxx
 /**********************************************************
 ************************NEW********************************
 **********************************************************/
@@ -180,7 +173,6 @@ function entriesFromABR (inData)
 //inPath_Entries, inBrushID, inBrushName
 function createEntryFromExisting(inData)
 {
-    try{
     //store current colors
     var tmpFG = app.foregroundColor.rgb
     var tmpBG = app.backgroundColor.rgb
@@ -219,7 +211,6 @@ function createEntryFromExisting(inData)
     app.backgroundColor.rgb = tmpBG
 
     return [newEntry]; 
-}catch(e){alert(e)}
 }
 
 
@@ -352,46 +343,6 @@ function setToolKeepPreset(inToolID)
     }
 }
 
-
-/*     PS Functions          */
-/*****************************/
-
-function createBrushPreset(inName)
-{
-    var desc3163 = new ActionDescriptor();
-    var ref609 = new ActionReference();
-    ref609.putClass( cID( "Brsh" ) );
-    desc3163.putReference( cID( "null" ), ref609 );
-    desc3163.putString( cID( "Nm  " ), inName );
-    var ref610 = new ActionReference();
-    ref610.putProperty( cID( "Prpr" ), cID( "CrnT" ) );
-    ref610.putEnumerated( cID( "capp" ), cID( "Ordn" ), cID( "Trgt" ) );
-    desc3163.putReference( cID( "Usng" ), ref610 );
-    executeAction( cID( "Mk  " ), desc3163, DialogModes.NO );
-}
-
-function saveABR (inIndex, inPath)
-{
-    var desc758 = new ActionDescriptor();
-    desc758.putPath( cID( "null" ), new File( inPath ) );
-    var list81 = new ActionList();
-    var ref366 = new ActionReference();
-    ref366.putIndex( cID( "Brsh" ), inIndex );
-    list81.putReference( ref366 );
-    desc758.putList( cID( "T   " ), list81 );
-    executeAction( cID( "setd" ), desc758, DialogModes.NO );
-}    
-
-
-function renameBrushPreset(inIndex, inName)
-{
-    var desc21 = new ActionDescriptor();
-    var ref4 = new ActionReference();
-    ref4.putIndex( cID( "Brsh" ), inIndex );
-    desc21.putReference( cID( "null" ), ref4 );
-    desc21.putString( cID( "T   " ), inName );
-    executeAction( cID( "Rnm " ), desc21, DialogModes.NO );
-}
 
 
 
@@ -623,7 +574,8 @@ function ToolPresetManager()
 }
 
 
-
+/************************** GENERAL **************************/
+/*************************************************************/
 
 function padZeroes(num, size)
 {
@@ -632,17 +584,48 @@ function padZeroes(num, size)
     return s;
 }
 
+/************************** END GENERAL **********************/
 
-// REMOVE
-function setToolPreset(inName)
+
+
+/************************** PS FUNCTIONS **************************/
+/******************************************************************/
+
+function createBrushPreset(inName)
 {
-    setToolToBrush()
-    var desc3 = new ActionDescriptor();
-    var ref1 = new ActionReference();
-    var idtoolPreset = sID( "toolPreset" );
-    ref1.putName( idtoolPreset, inName );
-    desc3.putReference( cID( "null" ), ref1 );
-    executeAction( cID( "slct" ), desc3, DialogModes.NO );
+    var desc3163 = new ActionDescriptor();
+    var ref609 = new ActionReference();
+    ref609.putClass( cID( "Brsh" ) );
+    desc3163.putReference( cID( "null" ), ref609 );
+    desc3163.putString( cID( "Nm  " ), inName );
+    var ref610 = new ActionReference();
+    ref610.putProperty( cID( "Prpr" ), cID( "CrnT" ) );
+    ref610.putEnumerated( cID( "capp" ), cID( "Ordn" ), cID( "Trgt" ) );
+    desc3163.putReference( cID( "Usng" ), ref610 );
+    executeAction( cID( "Mk  " ), desc3163, DialogModes.NO );
+}
+
+function saveABR (inIndex, inPath)
+{
+    var desc758 = new ActionDescriptor();
+    desc758.putPath( cID( "null" ), new File( inPath ) );
+    var list81 = new ActionList();
+    var ref366 = new ActionReference();
+    ref366.putIndex( cID( "Brsh" ), inIndex );
+    list81.putReference( ref366 );
+    desc758.putList( cID( "T   " ), list81 );
+    executeAction( cID( "setd" ), desc758, DialogModes.NO );
+}    
+
+
+function renameBrushPreset(inIndex, inName)
+{
+    var desc21 = new ActionDescriptor();
+    var ref4 = new ActionReference();
+    ref4.putIndex( cID( "Brsh" ), inIndex );
+    desc21.putReference( cID( "null" ), ref4 );
+    desc21.putString( cID( "T   " ), inName );
+    executeAction( cID( "Rnm " ), desc21, DialogModes.NO );
 }
 
 
@@ -655,47 +638,6 @@ function setTool(inToolID)
     executeAction( cID( "slct" ), desc, DialogModes.NO );  
 }
 
-//REMOVE
-function setToolToBrush()
-{
-    var desc = new ActionDescriptor();
-    var ref = new ActionReference();
-    ref.putClass( cID( "PbTl" ) );
-    desc.putReference( cID( "null" ), ref );
-    executeAction( cID( "slct" ), desc, DialogModes.NO );
-}
-
-function saveTool(inName, inFile)
-{                   
-    var curIndex = ToolPresets.getIndexByName (inName)   
-    savePresetByIndex (curIndex, inFile)
-}
-
-
-
-function savePresetByIndex(inIndex, inPath)
-{
-    var desc248 = new ActionDescriptor();
-    desc248.putPath( cID( "null" ), new File(inPath) );
-    var list20 = new ActionList();
-    var ref180 = new ActionReference();
-    ref180.putIndex( sID( "toolPreset" ), inIndex );
-    list20.putReference( ref180 );
-    desc248.putList( cID( "T   " ), list20 );
-    executeAction( cID( "setd" ), desc248, DialogModes.NO );
-}
-
-
-function setBrushByName(inName)
-{
-    var desc66532 = new ActionDescriptor();
-    var ref4752 = new ActionReference();
-    ref4752.putName( cID( "Brsh" ), inName );
-    desc66532.putReference( cID( "null" ), ref4752 );
-    executeAction( cID( "slct" ), desc66532, DialogModes.NO );
-}
-
-
 function setBrushID(inID)
 {
     var desc66532 = new ActionDescriptor();
@@ -705,21 +647,24 @@ function setBrushID(inID)
     executeAction( cID( "slct" ), desc66532, DialogModes.NO );   
 }
 
-//REMOVE
-function createTool(inName)
+function setToolToBrush()
 {
-    var desc147 = new ActionDescriptor();
-    var ref50 = new ActionReference();
-    ref50.putClass( sID( "toolPreset" ) );
-    desc147.putReference( cID( "null" ), ref50 );
-    var ref51 = new ActionReference();
-    ref51.putProperty( cID( "Prpr" ), cID( "CrnT" ) );
-    ref51.putEnumerated( cID( "capp" ), cID( "Ordn" ), cID( "Trgt" ) );
-    desc147.putReference( cID( "Usng" ), ref51 );
-    desc147.putString(cID( "Nm  " ), inName );
-    executeAction(cID( "Mk  " ), desc147, DialogModes.NO );
-
+    var desc = new ActionDescriptor();
+    var ref = new ActionReference();
+    ref.putClass( cID( "PbTl" ) );
+    desc.putReference( cID( "null" ), ref );
+    executeAction( cID( "slct" ), desc, DialogModes.NO );
 }
+
+/************************** END PS FUNCTIONS **********************/
+
+
+
+
+
+/************************** CLEANUP **************************/
+/*************************************************************/
+
 
 function getCurrentBrushName() 
 {  
@@ -1031,22 +976,25 @@ function deleteBrush(inID)
     executeAction( cID('Dlt '), desc1, DialogModes.NO );
 }
 
- function pickColor()
+ function pickColor(inData)
  {
     tmpColor =  app.foregroundColor.rgb
-    var cP = showColorPicker()  
-    if(!cP) return null;
+
+    try
+    {
+        var curColor = inData.isFG?inData.colorFG:inData.colorBG
+         app.foregroundColor.rgb.red = curColor.red
+         app.foregroundColor.rgb.green = curColor.green
+         app.foregroundColor.rgb.blue = curColor.blue
+    }
+    catch(e){}
+
+    var cP = showColorPicker()
     outColor = foregroundColor.rgb;
-    app.foregroundColor.rgb = tmpColor
-    return {red:outColor.red, green:outColor.green ,blue:outColor.blue }
+    app.foregroundColor.rgb = tmpColor  
+    if(!cP) return null;
+
+    return outColor
 }  
 
-
-function setToolToBrush()
-{
-    var desc = new ActionDescriptor();
-    var ref = new ActionReference();
-    ref.putClass( cID( "PbTl" ) );
-    desc.putReference( cID( "null" ), ref );
-    executeAction( cID( "slct" ), desc, DialogModes.NO );
-}
+/************************** END CLEANUP **********************/
